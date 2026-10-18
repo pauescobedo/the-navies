@@ -7,7 +7,8 @@ const memberName = document.querySelector('#member-name');
 localStorage.removeItem('navies-demo-chat');
 localStorage.removeItem('navies-demo-member');
 
-const scoreRoot = 'scores/festes-de-la-sagrera-2026';
+const scoreRoot = 'scores';
+const audioRoot = 'audios';
 const scoreLibrary = {
   'shake-it-off': [
     ['General', 'general.pdf'], ['Letra', 'letra.pdf'], ['Acordes', 'acordes.pdf'], ['Teclado', 'teclado.pdf']
@@ -42,7 +43,7 @@ document.querySelectorAll('[data-score-song]').forEach((container) => {
     item.innerHTML = `<button class="score-open" type="button" data-score-src="${source}" data-score-title="${songTitle} · ${label}">${label}</button>`;
     container.append(item);
   });
-  const audioSource = `${scoreRoot}/${song}/audio.mp3`;
+  const audioSource = `${audioRoot}/${song}.mp3`;
   const divider = document.createElement('span');
   divider.className = 'audio-divider';
   divider.setAttribute('aria-hidden', 'true');

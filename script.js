@@ -148,10 +148,10 @@ Object.assign(translations.it, { groupVocals:'3 cantanti', groupVocalsCopy:'Tre 
 Object.assign(translations.fr, { groupVocals:'3 chanteuses', groupVocalsCopy:'Trois voix pour les mélodies, harmonies et chœurs.', groupBass:'1 bassiste', groupBassCopy:'La base grave qui relie rythme et harmonie.', groupGuitar:'1 guitariste', groupGuitarCopy:'Des riffs, des accords et le caractère rock du groupe.', groupKeys:'1 claviériste', groupKeysCopy:'Pianos, synthétiseurs et textures sonores.', groupDrums:'1 batteur', groupDrumsCopy:'Le rythme qui porte tout le concert.', provisionalBio:'Ainsi se construit le son de The Navies.' });
 
 const seasonThemes = {
-  spring: { color:'#F4A7C1', icon:'✿' },
-  summer: { color:'#FFD76A', icon:'☀' },
-  autumn: { color:'#C77B52', icon:'❧' },
-  winter: { color:'#A8DADC', icon:'❄' }
+  spring: { color:'#F4A7C1', icon:'<svg viewBox="0 0 24 24"><path d="M12 9.2C9.2 5.6 10.4 2.5 12 2.5s2.8 3.1 0 6.7Zm2.8 2.8c3.6-2.8 6.7-1.6 6.7 0s-3.1 2.8-6.7 0ZM12 14.8c2.8 3.6 1.6 6.7 0 6.7s-2.8-3.1 0-6.7ZM9.2 12c-3.6 2.8-6.7 1.6-6.7 0s3.1-2.8 6.7 0Z"/><circle cx="12" cy="12" r="2.2"/></svg>' },
+  summer: { color:'#FFD76A', icon:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9 7 7M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg>' },
+  autumn: { color:'#C77B52', icon:'<svg viewBox="0 0 24 24"><path d="M19.5 4.5C12 4.7 6.5 8.1 5 15.2c3.7.7 7.2-.2 9.8-2.8 2.3-2.3 3.7-5.2 4.7-7.9Z"/><path d="M4.5 19.5c2.2-4.5 5.6-7.5 10.4-9.2"/></svg>' },
+  winter: { color:'#A8DADC', icon:'<svg viewBox="0 0 24 24"><path d="M12 2v20M3.3 7l17.4 10M20.7 7 3.3 17M9 4l3 3 3-3M9 20l3-3 3 3M4.8 10.2 9 9l-1.2-4.2M19.2 13.8 15 15l1.2 4.2M19.2 10.2 15 9l1.2-4.2M4.8 13.8 9 15l-1.2 4.2"/></svg>' }
 };
 let siteFooter = document.querySelector('footer');
 if (!siteFooter) {
@@ -254,7 +254,7 @@ if (contactForm) contactForm.addEventListener('submit', (event) => {
     ''
   ].filter((line, index, lines) => line || (index > 0 && lines[index - 1])).join('\n');
   const subject = `Contacto desde la web — ${data.get('name')}`;
-  window.location.href = `mailto:thenaviesgroup@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(details)}`;
+  window.location.href = `mailto:contacto@thenavies.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(details)}`;
 });
 
 const observer = new IntersectionObserver((entries) => {
