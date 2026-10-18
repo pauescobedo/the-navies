@@ -11,10 +11,10 @@ const scoreRoot = 'scores';
 const audioRoot = 'audios';
 const scoreLibrary = {
   'shake-it-off': [
-    ['General', 'general.pdf'], ['Letra', 'letra.pdf'], ['Acordes', 'acordes.pdf'], ['Teclado', 'teclado.pdf']
+    ['General', 'general.pdf'], ['Letra', 'letra.pdf'], ['Acordes', 'acordes.pdf'], ['Teclado', 'teclado.pdf'], ['Bajo', 'bajo.pdf']
   ],
   'baby-one-more-time': [
-    ['General', 'general.pdf'], ['Letra', 'letra.pdf'], ['Acordes', 'acordes.pdf'], ['Teclado', 'teclado.pdf']
+    ['Letra', 'letra.pdf']
   ],
   'sweet-caroline': [
     ['General', 'general.pdf'], ['Letra', 'letra.pdf'], ['Acordes', 'acordes.pdf'], ['Teclado', 'teclado.pdf'], ['Bajo', 'bajo.pdf']
@@ -68,16 +68,18 @@ document.querySelectorAll('.score-open').forEach((button) => button.addEventList
   scoreFrame.src = `${button.dataset.scoreSrc}#page=1&view=${pdfView}`;
   scoreDialogDownload.href = button.dataset.scoreSrc;
   scoreDialogDownload.setAttribute('download', '');
+  document.body.classList.add('score-viewer-open');
   scoreDialog.showModal();
 }));
-document.querySelector('.score-dialog-close').addEventListener('click', () => {
-  scoreDialog.close();
+function closeScoreDialog() {
   scoreFrame.src = '';
-});
+  document.body.classList.remove('score-viewer-open');
+  scoreDialog.close();
+}
+document.querySelector('.score-dialog-close').addEventListener('click', closeScoreDialog);
 scoreDialog.addEventListener('click', (event) => {
   if (event.target === scoreDialog) {
-    scoreDialog.close();
-    scoreFrame.src = '';
+    closeScoreDialog();
   }
 });
 
