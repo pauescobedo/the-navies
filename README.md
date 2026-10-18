@@ -1,10 +1,10 @@
 # The Navies — web oficial
 
-Sitio estático, responsive y sin dependencias. Abre `the-navies.html` directamente o sirve esta carpeta con cualquier servidor estático.
+Sitio estático, responsive y sin dependencias. Abre `index.html` directamente o sirve esta carpeta con cualquier servidor estático.
 
 ## Editar contenido
 
-Busca `EDITAR:` en `the-navies.html`. Ahí están marcados todos los datos provisionales:
+Busca `EDITAR:` en `index.html`. Ahí están marcados todos los datos provisionales:
 
 - Fechas y salas de conciertos
 - Biografía
@@ -14,7 +14,7 @@ Busca `EDITAR:` en `the-navies.html`. Ahí están marcados todos los datos provi
 
 ## Archivos
 
-- `the-navies.html`: estructura y contenido
+- `index.html`: estructura y contenido de toda la web
 - `styles.css`: diseño, colores y responsive
 - `script.js`: menú móvil, animaciones y año automático
 

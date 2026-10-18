@@ -86,3 +86,18 @@
 @media (max-width:600px) {
   .subpage-intro { padding-top:62px; }.featured-video { min-height:420px; margin:0 12px; border-radius:24px; }.video-library { padding-left:18px; padding-right:18px; }.video-grid { grid-template-columns:1fr; }.space-shell { padding-left:18px; padding-right:18px; }.dashboard-bar { align-items:flex-start; gap:18px; }.private-card { border-radius:20px; }.card-heading { display:grid; }.concert-status { justify-self:start; }.song-row { grid-template-columns:26px 1fr; }.material-tags { grid-column:2; justify-content:flex-start; }
 }
+
+[data-page-view][hidden] { display:none!important; }
+body.route-media { color:#f6f8f9; background:#091b2a; }
+body.route-media .site-header { color:white; background:rgba(7,22,34,.82); border-color:rgba(255,255,255,.1); }
+body.route-media .brand span { color:var(--lime); }
+body.route-media .language-trigger,
+body.route-media .header-icon { color:white; background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.2); }
+body.route-media .menu-toggle { border-color:rgba(255,255,255,.2); background:rgba(255,255,255,.08); }
+body.route-media .menu-toggle span:not(.sr-only) { background:white; }
+body.route-space { background:#eef3f4; }
+body.route-space .site-header { background:rgba(244,246,245,.9); border-bottom-color:var(--line); }
+@media (max-width:900px) {
+  body.route-media #main-nav,
+  body.route-media .mobile-nav-overlay { color:white; background:radial-gradient(ellipse 44% 30% at 8% 18%,color-mix(in srgb,var(--accent) 20%,transparent),transparent 72%),radial-gradient(ellipse 42% 34% at 94% 78%,color-mix(in srgb,var(--accent) 17%,transparent),transparent 74%),#091b2a; }
+}

@@ -18,8 +18,10 @@ function closeMenu() {
   siteHeader.classList.remove('header-hidden');
   menuButton.setAttribute('aria-expanded', 'false');
   navigation.classList.remove('open');
-  document.body.classList.remove('menu-open');
-  navigationRestoreTimer = setTimeout(restoreNavigation, 500);
+  navigationRestoreTimer = setTimeout(() => {
+    document.body.classList.remove('menu-open');
+    restoreNavigation();
+  }, 500);
 }
 
 menuButton.addEventListener('click', () => {
@@ -40,28 +42,46 @@ menuButton.addEventListener('click', () => {
   document.body.classList.add('menu-open');
 });
 
-navigation.querySelectorAll('a').forEach((link) => link.addEventListener('click', (event) => {
-  sessionStorage.setItem('the-navies-internal-navigation', '1');
-  closeMenu();
-  const destination = link.getAttribute('href');
-  if (destination && destination.endsWith('.html')) {
-    event.preventDefault();
-    window.location.assign(destination);
-  }
-}));
-document.addEventListener('click', (event) => {
-  const brand = event.target.closest('a.brand');
-  if (!brand) return;
-  const onHomePage = location.pathname.endsWith('/the-navies.html');
-  if (onHomePage) {
-    event.preventDefault();
-    document.querySelector('#inicio')?.scrollIntoView({ behavior:'smooth', block:'start' });
-    return;
-  }
+const pageViews = [...document.querySelectorAll('[data-page-view]')];
+const routeDetails = {
+  home: { hash:'#inicio', title:'The Navies' },
+  'navies-live': { hash:'#navies-live', title:'Navies Live' },
+  'espacio-navy': { hash:'#espacio-navy', title:'Espacio Navy' }
+};
+
+function routeFromHash() {
+  if (location.hash === '#navies-live') return 'navies-live';
+  if (location.hash === '#espacio-navy') return 'espacio-navy';
+  return 'home';
+}
+
+function showPage(route, updateHistory = true) {
+  const selectedRoute = routeDetails[route] ? route : 'home';
+  pageViews.forEach((view) => { view.hidden = view.dataset.pageView !== selectedRoute; });
+  navigation.querySelectorAll('[data-route]').forEach((link) => {
+    link.classList.toggle('active', link.dataset.route === selectedRoute);
+  });
+  document.body.classList.toggle('route-media', selectedRoute === 'navies-live');
+  document.body.classList.toggle('route-space', selectedRoute === 'espacio-navy');
+  document.title = routeDetails[selectedRoute].title;
+  if (updateHistory) history.pushState({ route:selectedRoute }, '', routeDetails[selectedRoute].hash);
+  window.scrollTo({ top:0, left:0, behavior:'instant' });
+  requestAnimationFrame(() => window.dispatchEvent(new Event('scroll')));
+}
+
+navigation.querySelectorAll('[data-route]').forEach((link) => link.addEventListener('click', (event) => {
   event.preventDefault();
-  sessionStorage.setItem('the-navies-internal-navigation', '1');
-  window.location.assign(brand.getAttribute('href'));
-});
+  const route = link.dataset.route;
+  navigation.querySelectorAll('[data-route]').forEach((item) => item.classList.toggle('active', item === link));
+  closeMenu();
+  setTimeout(() => showPage(route), window.matchMedia('(max-width: 900px)').matches ? 190 : 0);
+}));
+document.querySelectorAll('a.brand[data-route]').forEach((brand) => brand.addEventListener('click', (event) => {
+  event.preventDefault();
+  showPage('home');
+}));
+window.addEventListener('popstate', () => showPage(routeFromHash(), false));
+showPage(routeFromHash(), false);
 window.addEventListener('resize', () => {
   if (!window.matchMedia('(max-width: 900px)').matches) {
     closeMenu();
@@ -206,7 +226,7 @@ const seasonThemes = {
 let siteFooter = document.querySelector('footer');
 if (!siteFooter) {
   siteFooter = document.createElement('footer');
-  siteFooter.innerHTML = '<a class="brand" href="the-navies.html">THE NAVIES<span>.</span></a><p data-i18n="genreLine">Rock · Pop · Clásicos</p><p>© <span class="footer-year"></span> The Navies</p>';
+  siteFooter.innerHTML = '<a class="brand" href="#inicio" data-route="home">THE NAVIES<span>.</span></a><p data-i18n="genreLine">Rock · Pop · Clásicos</p><p>© <span class="footer-year"></span> The Navies</p>';
   document.body.append(siteFooter);
 }
 const seasonControl = document.createElement('div');
@@ -403,6 +423,9 @@ window.naviesLogin = (username, password) => {
   if (accountDialog.open) accountDialog.close();
   const copy = translations[currentLanguage] || translations.es;
   showAuthToast(copy.sessionActive || translations.es.sessionActive);
+  if (window.matchMedia('(max-width: 900px)').matches) {
+    requestAnimationFrame(() => window.scrollTo({ top:0, left:0, behavior:'instant' }));
+  }
   return true;
 };
 

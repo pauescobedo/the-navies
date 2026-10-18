@@ -1,8 +1,9 @@
 {
   "name": "The Navies",
   "short_name": "The Navies",
+  "id": "./index.html",
   "description": "Web oficial de The Navies.",
-  "start_url": "./the-navies.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#edf1f4",
