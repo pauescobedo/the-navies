@@ -136,11 +136,11 @@ Object.assign(translations.ca, { seasonTitle:'Tema estacional', spring:'Primaver
 Object.assign(translations.en, { seasonTitle:'Seasonal theme', spring:'Spring', summer:'Summer', autumn:'Autumn', winter:'Winter' });
 Object.assign(translations.it, { seasonTitle:'Tema stagionale', spring:'Primavera', summer:'Estate', autumn:'Autunno', winter:'Inverno' });
 Object.assign(translations.fr, { seasonTitle:'Thème saisonnier', spring:'Printemps', summer:'Été', autumn:'Automne', winter:'Hiver' });
-Object.assign(translations.es, { visualVocals:'Voces', visualBass:'Bajo', visualGuitar:'Guitarra', visualKeys:'Teclados', visualDrums:'Batería', sessionActive:'Sesión iniciada' });
-Object.assign(translations.ca, { visualVocals:'Veus', visualBass:'Baix', visualGuitar:'Guitarra', visualKeys:'Teclats', visualDrums:'Bateria', sessionActive:'Sessió iniciada' });
-Object.assign(translations.en, { visualVocals:'Vocals', visualBass:'Bass', visualGuitar:'Guitar', visualKeys:'Keyboards', visualDrums:'Drums', sessionActive:'Signed in' });
-Object.assign(translations.it, { visualVocals:'Voci', visualBass:'Basso', visualGuitar:'Chitarra', visualKeys:'Tastiere', visualDrums:'Batteria', sessionActive:'Accesso effettuato' });
-Object.assign(translations.fr, { visualVocals:'Voix', visualBass:'Basse', visualGuitar:'Guitare', visualKeys:'Claviers', visualDrums:'Batterie', sessionActive:'Session ouverte' });
+Object.assign(translations.es, { visualVocals:'Voces', visualBass:'Bajo', visualGuitar:'Guitarra', visualKeys:'Teclados', visualDrums:'Batería', sessionActive:'Sesión iniciada', sessionClosed:'Sesión cerrada' });
+Object.assign(translations.ca, { visualVocals:'Veus', visualBass:'Baix', visualGuitar:'Guitarra', visualKeys:'Teclats', visualDrums:'Bateria', sessionActive:'Sessió iniciada', sessionClosed:'Sessió tancada' });
+Object.assign(translations.en, { visualVocals:'Vocals', visualBass:'Bass', visualGuitar:'Guitar', visualKeys:'Keyboards', visualDrums:'Drums', sessionActive:'Signed in', sessionClosed:'Signed out' });
+Object.assign(translations.it, { visualVocals:'Voci', visualBass:'Basso', visualGuitar:'Chitarra', visualKeys:'Tastiere', visualDrums:'Batteria', sessionActive:'Accesso effettuato', sessionClosed:'Sessione chiusa' });
+Object.assign(translations.fr, { visualVocals:'Voix', visualBass:'Basse', visualGuitar:'Guitare', visualKeys:'Claviers', visualDrums:'Batterie', sessionActive:'Session ouverte', sessionClosed:'Session fermée' });
 Object.assign(translations.es, { groupVocals:'3 cantantes', groupVocalsCopy:'Tres voces para melodías, armonías y coros.', groupBass:'1 bajista', groupBassCopy:'La base grave que une ritmo y armonía.', groupGuitar:'1 guitarrista', groupGuitarCopy:'Riffs, acordes y el carácter rock del grupo.', groupKeys:'1 teclista', groupKeysCopy:'Pianos, sintetizadores y capas de sonido.', groupDrums:'1 batería', groupDrumsCopy:'El pulso que sostiene y empuja todo el directo.', provisionalBio:'Así se completa el sonido de The Navies.' });
 Object.assign(translations.ca, { groupVocals:'3 cantants', groupVocalsCopy:'Tres veus per a melodies, harmonies i cors.', groupBass:'1 baixista', groupBassCopy:'La base greu que uneix ritme i harmonia.', groupGuitar:'1 guitarrista', groupGuitarCopy:'Riffs, acords i el caràcter rock del grup.', groupKeys:'1 teclista', groupKeysCopy:'Pianos, sintetitzadors i capes de so.', groupDrums:'1 bateria', groupDrumsCopy:'El pols que sosté i impulsa tot el directe.', provisionalBio:'Així es completa el so de The Navies.' });
 Object.assign(translations.en, { groupVocals:'3 singers', groupVocalsCopy:'Three voices for melodies, harmonies and choruses.', groupBass:'1 bassist', groupBassCopy:'The low-end foundation joining rhythm and harmony.', groupGuitar:'1 guitarist', groupGuitarCopy:'Riffs, chords and the band’s rock character.', groupKeys:'1 keyboardist', groupKeysCopy:'Pianos, synthesisers and layers of sound.', groupDrums:'1 drummer', groupDrumsCopy:'The pulse driving the whole live show.', provisionalBio:'This is how The Navies completes its sound.' });
@@ -294,21 +294,32 @@ accountDialog.innerHTML = `
     <h2>Acceso de miembros</h2>
     <p>Introduce tus credenciales para acceder al espacio interno de la banda.</p>
     <form class="account-login-form">
-      <label><span>Usuario</span><input name="username" autocomplete="username" required></label>
-      <label><span>Contraseña</span><input name="password" type="password" autocomplete="current-password" required></label>
+      <label><span>Usuario</span><input name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
+      <label><span>Contraseña</span><input name="password" type="password" autocomplete="current-password" autocapitalize="none" spellcheck="false" required></label>
       <button type="submit">Entrar</button>
     </form>
     <p class="account-error" aria-live="polite"></p>
   </div>
   <div class="account-member-view" hidden>
-    <span class="account-member-icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.25"></circle><path d="M5.5 19c.65-3.6 3-5.5 6.5-5.5s5.85 1.9 6.5 5.5"></path></svg>
-    </span>
+    <span class="account-member-icon" aria-hidden="true"></span>
     <p class="account-session-status">Sesión iniciada</p>
     <h2 class="account-member-greeting"></h2>
     <button class="account-logout" type="button">Cerrar sesión</button>
   </div>`;
 document.body.append(accountDialog);
+const authToast = document.createElement('div');
+authToast.className = 'auth-toast';
+authToast.setAttribute('role', 'status');
+authToast.setAttribute('aria-live', 'polite');
+document.body.append(authToast);
+let authToastTimer;
+
+function showAuthToast(message) {
+  clearTimeout(authToastTimer);
+  authToast.textContent = message;
+  authToast.classList.add('visible');
+  authToastTimer = setTimeout(() => authToast.classList.remove('visible'), 2200);
+}
 
 function validNavyMember() {
   const member = localStorage.getItem('navies-member-session');
@@ -331,6 +342,7 @@ function updateAccountUI() {
   accountDialog.querySelector('.account-session-status').textContent = copy.sessionActive || translations.es.sessionActive;
   accountDialog.querySelector('.account-logout').textContent = copy.signOut || translations.es.signOut;
   accountDialog.querySelector('.account-member-greeting').textContent = member ? `${copy.hello || translations.es.hello}, ${navyMemberNames[member]}.` : '';
+  accountDialog.querySelector('.account-member-icon').textContent = member ? member.charAt(0).toUpperCase() : '';
 }
 
 window.naviesLogin = (username, password) => {
@@ -339,7 +351,7 @@ window.naviesLogin = (username, password) => {
   localStorage.setItem('navies-member-session', member);
   updateAccountUI();
   window.dispatchEvent(new CustomEvent('navies-auth-change', { detail: { member } }));
-  if (accountDialog.open) accountDialog.close();
+  if (!accountDialog.open) accountDialog.showModal();
   return true;
 };
 
@@ -348,6 +360,8 @@ window.naviesLogout = () => {
   updateAccountUI();
   window.dispatchEvent(new CustomEvent('navies-auth-change', { detail: { member: null } }));
   if (accountDialog.open) accountDialog.close();
+  const copy = translations[currentLanguage] || translations.es;
+  showAuthToast(copy.sessionClosed || translations.es.sessionClosed);
 };
 
 document.querySelectorAll('.account-trigger').forEach((trigger) => trigger.addEventListener('click', () => {

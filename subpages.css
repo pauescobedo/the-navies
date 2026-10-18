@@ -53,7 +53,7 @@
 .login-panel { width:100%; margin:0; padding:clamp(32px,5vw,54px); border-radius:30px; color:white; background:var(--ink); box-shadow:0 28px 80px rgba(13,42,67,.18); }
 .login-panel h2 { font-size:clamp(34px,5vw,54px); }.login-panel > p { color:#b9cedb; line-height:1.6; }
 .login-form { display:grid; grid-template-columns:1fr; gap:14px; margin-top:30px; }
-.login-form input { min-width:0; border:1px solid rgba(255,255,255,.24); border-radius:14px; padding:15px 16px; color:white; background:rgba(255,255,255,.08); font:500 14px "DM Sans",sans-serif; outline:none; }
+.login-form input { min-width:0; border:1px solid rgba(255,255,255,.24); border-radius:14px; padding:15px 16px; color:white; background:rgba(255,255,255,.08); font:500 16px "DM Sans",sans-serif; outline:none; }
 .login-form input:focus { border-color:var(--lime); }.login-form button { min-height:50px; border:0; border-radius:14px; padding:0 20px; color:var(--accent-contrast); background:var(--lime); font-weight:700; cursor:pointer; }
 .login-hint { display:block; margin-top:16px; color:#91a9b7; font-size:11px; line-height:1.5; }
 .login-error { color:#ffd3d3!important; font-size:12px; min-height:18px; }
@@ -80,8 +80,8 @@
 
 @media (max-width:900px) {
   .subpage { padding-top:76px; }.subpage .site-header nav { color:var(--ink-deep); }.media-page .site-header nav { color:white; background:rgba(7,22,34,.98); }
-  .media-page .site-header nav > a:not(.nav-cta) { border-color:rgba(255,255,255,.18); background:rgba(255,255,255,.07); }
-  .media-page .site-header nav > a.active:not(.nav-cta) { color:var(--accent-contrast); border-color:var(--accent); background:var(--accent); }
+  .media-page .site-header nav > a:not(.nav-cta) { border:0; background:transparent; }
+  .media-page .site-header nav > a.active:not(.nav-cta) { color:white; border:0; background:transparent; }
   .media-page .site-header nav::after { color:rgba(255,255,255,.58); }
   .video-grid { grid-template-columns:1fr 1fr; }.dashboard-grid { grid-template-columns:1fr; }.space-entry { grid-template-columns:1fr; }.login-form { grid-template-columns:1fr; }.login-form button { min-height:50px; }
 }
