@@ -9,8 +9,10 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>The Navies</title>
-  <link rel="icon" href="favicon.svg?v=20261019.7" type="image/svg+xml">
-  <link rel="manifest" href="manifest.webmanifest?v=20261019.6">
+  <link rel="icon" href="favicon.svg?v=20261019.8" type="image/svg+xml">
+  <link rel="icon" href="icons/favicon-32.png?v=20261019.8" sizes="32x32" type="image/png">
+  <link rel="icon" href="icons/favicon-64.png?v=20261019.8" sizes="64x64" type="image/png">
+  <link rel="manifest" href="manifest.webmanifest?v=20261019.8">
   <link rel="apple-touch-icon" sizes="57x57" href="icons/apple-touch-icon-57.png?v=20261019.6">
   <link rel="apple-touch-icon" sizes="60x60" href="icons/apple-touch-icon-60.png?v=20261019.6">
   <link rel="apple-touch-icon" sizes="72x72" href="icons/apple-touch-icon-72.png?v=20261019.6">
@@ -20,17 +22,18 @@
   <link rel="apple-touch-icon" sizes="144x144" href="icons/apple-touch-icon-144.png?v=20261019.6">
   <link rel="apple-touch-icon" sizes="152x152" href="icons/apple-touch-icon-152.png?v=20261019.6">
   <link rel="apple-touch-icon" sizes="167x167" href="icons/apple-touch-icon-167.png?v=20261019.6">
-  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon-180.png?v=20261019.6">
-  <link rel="apple-touch-icon-precomposed" sizes="180x180" href="icons/apple-touch-icon-180.png?v=20261019.6">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="apple-touch-icon-precomposed" sizes="180x180" href="apple-touch-icon.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="The Navies">
+  <style>@media(max-width:900px){html:not(.nav-ready) #main-nav{display:none!important}}</style>
   <script>try{const c={spring:'#F4A7C1',summer:'#FFD76A',autumn:'#C77B52',winter:'#A8DADC'},n=performance.getEntriesByType('navigation')[0],i=sessionStorage.getItem('the-navies-internal-navigation')==='1',k=i||(n&&n.type==='back_forward');sessionStorage.removeItem('the-navies-internal-navigation');if(!k)localStorage.removeItem('the-navies-season');const s=k&&localStorage.getItem('the-navies-season')||'autumn';window.__naviesInitialSeason=c[s]?s:'autumn';document.documentElement.dataset.season=window.__naviesInitialSeason;document.documentElement.style.setProperty('--accent',c[window.__naviesInitialSeason])}catch(e){document.documentElement.dataset.season='autumn'}</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20261019.6">
-  <link rel="stylesheet" href="subpages.css?v=20261019.6">
+  <link rel="stylesheet" href="styles.css?v=20261019.8">
+  <link rel="stylesheet" href="subpages.css?v=20261019.8">
 </head>
 <body>
   <div class="noise" aria-hidden="true"></div>
@@ -118,7 +121,7 @@
           <p class="eyebrow light"><span></span> <span data-i18n="soundLabel">Nuestro sonido</span></p>
           <h2 data-i18n-html="soundTitle">Buenas canciones.<br><em>Mejor en directo.</em></h2>
           <p data-i18n="soundBody">Una mezcla de clásicos del rock, grandes canciones pop y esos himnos que todo el mundo reconoce desde el primer acorde. Siete músicos, voces compartidas y un directo pensado para conectar, cantar y disfrutar juntos.</p>
-          <p class="sound-signature" data-i18n="soundSignature">Siete músicos · Tres voces · Un escenario</p>
+          <p class="sound-signature" data-i18n="soundSignature">Siete músicos · Un único escenario</p>
           <p class="setlist-example"><small data-i18n="exampleNote">Ejemplos orientativos; el repertorio puede variar.</small></p>
         </div>
         <div class="genre-stack" aria-label="Estilos musicales">
@@ -256,7 +259,7 @@
     <p>© <span id="year"></span> The Navies</p>
   </footer>
 
-  <script src="script.js?v=20261019.6"></script>
+  <script src="script.js?v=20261019.8"></script>
   <script src="portal.js?v=20261019.2"></script>
 </body>
 </html>

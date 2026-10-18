@@ -1,3 +1,4 @@
+document.documentElement.classList.add('nav-ready');
 const menuButton = document.querySelector('.menu-toggle');
 const navigation = document.querySelector('#main-nav');
 const siteHeader = document.querySelector('.site-header');
@@ -117,11 +118,11 @@ Object.assign(translations.ca, { soundTitle:'Bones cançons.<br><em>Millor en di
 Object.assign(translations.en, { soundTitle:'Good songs.<br><em>Better live.</em>' });
 Object.assign(translations.it, { soundTitle:'Belle canzoni.<br><em>Meglio dal vivo.</em>' });
 Object.assign(translations.fr, { soundTitle:'De bonnes chansons.<br><em>Encore meilleures en concert.</em>' });
-Object.assign(translations.es, { soundSignature:'Siete músicos · Tres voces · Un escenario' });
-Object.assign(translations.ca, { soundSignature:'Set músics · Tres veus · Un escenari' });
-Object.assign(translations.en, { soundSignature:'Seven musicians · Three voices · One stage' });
-Object.assign(translations.it, { soundSignature:'Sette musicisti · Tre voci · Un palco' });
-Object.assign(translations.fr, { soundSignature:'Sept musiciens · Trois voix · Une scène' });
+Object.assign(translations.es, { soundSignature:'Siete músicos · Un único escenario' });
+Object.assign(translations.ca, { soundSignature:'Set músics · Un únic escenari' });
+Object.assign(translations.en, { soundSignature:'Seven musicians · One single stage' });
+Object.assign(translations.it, { soundSignature:'Sette musicisti · Un unico palco' });
+Object.assign(translations.fr, { soundSignature:'Sept musiciens · Une seule scène' });
 
 Object.assign(translations.es, { genreLine:'Rock · Pop · Clásicos', christmasTitle:'Concierto de Navidad', datePending:'Fecha por confirmar', dateInfo:'Anunciaremos la fecha del concierto de Navidad próximamente.', classicRock:'ROCK CLÁSICO', stadiumRock:'ROCK DE ESTADIO', rockStyle:'Guitarras, raíces y canciones que nunca envejecen', popStyle:'Ritmo, melodía y un estribillo para cantar juntos', anthemStyle:'Teclados, épica y toda la energía del directo', meetMember:'Conócela ↗', meetMemberMale:'Conócelo ↗', memberLabel:'La banda', provisionalBio:'Biografía provisional.' });
 Object.assign(translations.ca, { genreLine:'Rock · Pop · Clàssics', christmasTitle:'Concert de Nadal', datePending:'Data per confirmar', dateInfo:'Anunciarem la data del concert de Nadal ben aviat.', classicRock:'ROCK CLÀSSIC', stadiumRock:'ROCK D’ESTADI', rockStyle:'Guitarres, arrels i cançons que mai no envelleixen', popStyle:'Ritme, melodia i una tornada per cantar plegats', anthemStyle:'Teclats, èpica i tota l’energia del directe', meetMember:'Coneix-la ↗', meetMemberMale:'Coneix-lo ↗', memberLabel:'La banda', provisionalBio:'Biografia provisional.' });
