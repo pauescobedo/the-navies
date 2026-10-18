@@ -64,7 +64,8 @@ const scoreDialogTitle = document.querySelector('#score-dialog-title');
 const scoreDialogDownload = document.querySelector('#score-dialog-download');
 document.querySelectorAll('.score-open').forEach((button) => button.addEventListener('click', () => {
   scoreDialogTitle.textContent = button.dataset.scoreTitle;
-  scoreFrame.src = `${button.dataset.scoreSrc}#view=FitH`;
+  const pdfView = window.matchMedia('(max-width: 600px)').matches ? 'Fit' : 'FitH';
+  scoreFrame.src = `${button.dataset.scoreSrc}#page=1&view=${pdfView}`;
   scoreDialogDownload.href = button.dataset.scoreSrc;
   scoreDialogDownload.setAttribute('download', '');
   scoreDialog.showModal();

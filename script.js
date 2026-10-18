@@ -1,23 +1,52 @@
 const menuButton = document.querySelector('.menu-toggle');
 const navigation = document.querySelector('#main-nav');
 const siteHeader = document.querySelector('.site-header');
+const navigationParent = navigation.parentNode;
+const navigationNextSibling = navigation.nextSibling;
+let navigationRestoreTimer;
 let lastScrollY = window.scrollY;
+
+function restoreNavigation() {
+  clearTimeout(navigationRestoreTimer);
+  if (navigation.parentNode !== navigationParent) navigationParent.insertBefore(navigation, navigationNextSibling);
+  navigation.classList.remove('mobile-nav-overlay');
+}
 
 function closeMenu() {
   menuButton.setAttribute('aria-expanded', 'false');
   navigation.classList.remove('open');
   document.body.classList.remove('menu-open');
+  navigationRestoreTimer = setTimeout(restoreNavigation, 500);
 }
 
 menuButton.addEventListener('click', () => {
   const isOpen = menuButton.getAttribute('aria-expanded') === 'true';
   siteHeader.classList.remove('header-hidden');
-  menuButton.setAttribute('aria-expanded', String(!isOpen));
-  navigation.classList.toggle('open', !isOpen);
-  document.body.classList.toggle('menu-open', !isOpen);
+  if (isOpen) {
+    closeMenu();
+    return;
+  }
+  if (window.matchMedia('(max-width: 900px)').matches) {
+    clearTimeout(navigationRestoreTimer);
+    document.body.append(navigation);
+    navigation.classList.add('mobile-nav-overlay');
+    void navigation.offsetHeight;
+  }
+  menuButton.setAttribute('aria-expanded', 'true');
+  navigation.classList.add('open');
+  document.body.classList.add('menu-open');
 });
 
-navigation.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMenu));
+navigation.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => {
+  sessionStorage.setItem('the-navies-internal-navigation', '1');
+  closeMenu();
+}));
+window.addEventListener('resize', () => {
+  if (!window.matchMedia('(max-width: 900px)').matches) {
+    closeMenu();
+    restoreNavigation();
+  }
+});
 
 window.addEventListener('scroll', () => {
   const currentScrollY = window.scrollY;
@@ -141,11 +170,11 @@ Object.assign(translations.ca, { visualVocals:'Veus', visualBass:'Baix', visualG
 Object.assign(translations.en, { visualVocals:'Vocals', visualBass:'Bass', visualGuitar:'Guitar', visualKeys:'Keyboards', visualDrums:'Drums', sessionActive:'Signed in', sessionClosed:'Signed out' });
 Object.assign(translations.it, { visualVocals:'Voci', visualBass:'Basso', visualGuitar:'Chitarra', visualKeys:'Tastiere', visualDrums:'Batteria', sessionActive:'Accesso effettuato', sessionClosed:'Sessione chiusa' });
 Object.assign(translations.fr, { visualVocals:'Voix', visualBass:'Basse', visualGuitar:'Guitare', visualKeys:'Claviers', visualDrums:'Batterie', sessionActive:'Session ouverte', sessionClosed:'Session fermée' });
-Object.assign(translations.es, { groupVocals:'3 cantantes', groupVocalsCopy:'Tres voces para melodías, armonías y coros.', groupBass:'1 bajista', groupBassCopy:'La base grave que une ritmo y armonía.', groupGuitar:'1 guitarrista', groupGuitarCopy:'Riffs, acordes y el carácter rock del grupo.', groupKeys:'1 teclista', groupKeysCopy:'Pianos, sintetizadores y capas de sonido.', groupDrums:'1 batería', groupDrumsCopy:'El pulso que sostiene y empuja todo el directo.', provisionalBio:'Así se completa el sonido de The Navies.' });
-Object.assign(translations.ca, { groupVocals:'3 cantants', groupVocalsCopy:'Tres veus per a melodies, harmonies i cors.', groupBass:'1 baixista', groupBassCopy:'La base greu que uneix ritme i harmonia.', groupGuitar:'1 guitarrista', groupGuitarCopy:'Riffs, acords i el caràcter rock del grup.', groupKeys:'1 teclista', groupKeysCopy:'Pianos, sintetitzadors i capes de so.', groupDrums:'1 bateria', groupDrumsCopy:'El pols que sosté i impulsa tot el directe.', provisionalBio:'Així es completa el so de The Navies.' });
-Object.assign(translations.en, { groupVocals:'3 singers', groupVocalsCopy:'Three voices for melodies, harmonies and choruses.', groupBass:'1 bassist', groupBassCopy:'The low-end foundation joining rhythm and harmony.', groupGuitar:'1 guitarist', groupGuitarCopy:'Riffs, chords and the band’s rock character.', groupKeys:'1 keyboardist', groupKeysCopy:'Pianos, synthesisers and layers of sound.', groupDrums:'1 drummer', groupDrumsCopy:'The pulse driving the whole live show.', provisionalBio:'This is how The Navies completes its sound.' });
-Object.assign(translations.it, { groupVocals:'3 cantanti', groupVocalsCopy:'Tre voci per melodie, armonie e cori.', groupBass:'1 bassista', groupBassCopy:'La base grave che unisce ritmo e armonia.', groupGuitar:'1 chitarrista', groupGuitarCopy:'Riff, accordi e il carattere rock della band.', groupKeys:'1 tastierista', groupKeysCopy:'Pianoforti, sintetizzatori e strati sonori.', groupDrums:'1 batterista', groupDrumsCopy:'Il ritmo che sostiene e spinge tutto il live.', provisionalBio:'Così si completa il suono dei The Navies.' });
-Object.assign(translations.fr, { groupVocals:'3 chanteuses', groupVocalsCopy:'Trois voix pour les mélodies, harmonies et chœurs.', groupBass:'1 bassiste', groupBassCopy:'La base grave qui relie rythme et harmonie.', groupGuitar:'1 guitariste', groupGuitarCopy:'Des riffs, des accords et le caractère rock du groupe.', groupKeys:'1 claviériste', groupKeysCopy:'Pianos, synthétiseurs et textures sonores.', groupDrums:'1 batteur', groupDrumsCopy:'Le rythme qui porte tout le concert.', provisionalBio:'Ainsi se construit le son de The Navies.' });
+Object.assign(translations.es, { groupVocals:'tres cantantes', groupVocalsCopy:'Tres voces para melodías, armonías y coros.', groupBass:'una bajista', groupBassCopy:'La base grave que une ritmo y armonía.', groupGuitar:'un guitarrista', groupGuitarCopy:'Riffs, acordes y el carácter rock del grupo.', groupKeys:'un teclista', groupKeysCopy:'Pianos, sintetizadores y capas de sonido.', groupDrums:'un batería', groupDrumsCopy:'El pulso que sostiene y empuja todo el directo.', provisionalBio:'Así se completa el sonido de The Navies.' });
+Object.assign(translations.ca, { groupVocals:'tres cantants', groupVocalsCopy:'Tres veus per a melodies, harmonies i cors.', groupBass:'una baixista', groupBassCopy:'La base greu que uneix ritme i harmonia.', groupGuitar:'un guitarrista', groupGuitarCopy:'Riffs, acords i el caràcter rock del grup.', groupKeys:'un teclista', groupKeysCopy:'Pianos, sintetitzadors i capes de so.', groupDrums:'un bateria', groupDrumsCopy:'El pols que sosté i impulsa tot el directe.', provisionalBio:'Així es completa el so de The Navies.' });
+Object.assign(translations.en, { groupVocals:'three singers', groupVocalsCopy:'Three voices for melodies, harmonies and choruses.', groupBass:'one bassist', groupBassCopy:'The low-end foundation joining rhythm and harmony.', groupGuitar:'one guitarist', groupGuitarCopy:'Riffs, chords and the band’s rock character.', groupKeys:'one keyboardist', groupKeysCopy:'Pianos, synthesisers and layers of sound.', groupDrums:'one drummer', groupDrumsCopy:'The pulse driving the whole live show.', provisionalBio:'This is how The Navies completes its sound.' });
+Object.assign(translations.it, { groupVocals:'tre cantanti', groupVocalsCopy:'Tre voci per melodie, armonie e cori.', groupBass:'una bassista', groupBassCopy:'La base grave che unisce ritmo e armonia.', groupGuitar:'un chitarrista', groupGuitarCopy:'Riff, accordi e il carattere rock della band.', groupKeys:'un tastierista', groupKeysCopy:'Pianoforti, sintetizzatori e strati sonori.', groupDrums:'un batterista', groupDrumsCopy:'Il ritmo che sostiene e spinge tutto il live.', provisionalBio:'Così si completa il suono dei The Navies.' });
+Object.assign(translations.fr, { groupVocals:'trois chanteuses', groupVocalsCopy:'Trois voix pour les mélodies, harmonies et chœurs.', groupBass:'une bassiste', groupBassCopy:'La base grave qui relie rythme et harmonie.', groupGuitar:'un guitariste', groupGuitarCopy:'Des riffs, des accords et le caractère rock du groupe.', groupKeys:'un claviériste', groupKeysCopy:'Pianos, synthétiseurs et textures sonores.', groupDrums:'un batteur', groupDrumsCopy:'Le rythme qui porte tout le concert.', provisionalBio:'Ainsi se construit le son de The Navies.' });
 
 const seasonThemes = {
   spring: { color:'#F4A7C1', icon:'🌸' },
@@ -175,10 +204,9 @@ function setSeason(season, persist = true) {
   const seasonalIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#173c5b"/><circle cx="50" cy="14" r="6" fill="${seasonThemes[selected].color}"/><text x="9" y="42" fill="#fff" font-family="Arial,Helvetica,sans-serif" font-size="28" font-weight="700" letter-spacing="-2">TN</text></svg>`;
   document.querySelector('link[rel="icon"]').href = `data:image/svg+xml,${encodeURIComponent(seasonalIcon)}`;
   document.querySelectorAll('.season-option').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.season === selected)));
-  if (persist) sessionStorage.setItem('the-navies-season', selected);
+  if (persist) localStorage.setItem('the-navies-season', selected);
 }
-localStorage.removeItem('the-navies-season');
-setSeason(window.__naviesInitialSeason || sessionStorage.getItem('the-navies-season') || 'autumn', false);
+setSeason(window.__naviesInitialSeason || localStorage.getItem('the-navies-season') || 'autumn', false);
 requestAnimationFrame(() => document.documentElement.classList.add('theme-ready'));
 seasonControl.querySelectorAll('.season-option').forEach((button) => button.addEventListener('click', () => setSeason(button.dataset.season)));
 Object.assign(translations.es, { navVideos:'Navies Live', time:'13:00 h', tvSoonTitle:'Estamos afinando<br><em>la pantalla.</em>', tvSoonCopy:'Próximamente publicaremos aquí los primeros vídeos de The Navies.' });
@@ -351,7 +379,9 @@ window.naviesLogin = (username, password) => {
   localStorage.setItem('navies-member-session', member);
   updateAccountUI();
   window.dispatchEvent(new CustomEvent('navies-auth-change', { detail: { member } }));
-  if (!accountDialog.open) accountDialog.showModal();
+  if (accountDialog.open) accountDialog.close();
+  const copy = translations[currentLanguage] || translations.es;
+  showAuthToast(copy.sessionActive || translations.es.sessionActive);
   return true;
 };
 

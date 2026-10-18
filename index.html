@@ -9,12 +9,12 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <title>The Navies</title>
-  <link rel="icon" href="favicon.svg?v=20261018.13" type="image/svg+xml">
-  <script>try{const c={spring:'#F4A7C1',summer:'#FFD76A',autumn:'#C77B52',winter:'#A8DADC'},n=performance.getEntriesByType('navigation')[0],r=n&&n.type==='reload';if(r)sessionStorage.removeItem('the-navies-season');const s=!r&&sessionStorage.getItem('the-navies-season')||'autumn';window.__naviesInitialSeason=s;document.documentElement.dataset.season=s;document.documentElement.style.setProperty('--accent',c[s]||c.autumn)}catch(e){document.documentElement.dataset.season='autumn'}</script>
+  <link rel="icon" href="favicon.svg?v=20261018.17" type="image/svg+xml">
+  <script>try{const c={spring:'#F4A7C1',summer:'#FFD76A',autumn:'#C77B52',winter:'#A8DADC'},n=performance.getEntriesByType('navigation')[0],i=sessionStorage.getItem('the-navies-internal-navigation')==='1',k=i||(n&&n.type==='back_forward');sessionStorage.removeItem('the-navies-internal-navigation');if(!k)localStorage.removeItem('the-navies-season');const s=k&&localStorage.getItem('the-navies-season')||'autumn';window.__naviesInitialSeason=c[s]?s:'autumn';document.documentElement.dataset.season=window.__naviesInitialSeason;document.documentElement.style.setProperty('--accent',c[window.__naviesInitialSeason])}catch(e){document.documentElement.dataset.season='autumn'}</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20261018.13">
+  <link rel="stylesheet" href="styles.css?v=20261018.17">
 </head>
 <body>
   <div class="noise" aria-hidden="true"></div>
@@ -120,11 +120,11 @@
         <p data-i18n="bandBody">Somos siete jóvenes apasionados por la música, unidos por las ganas de tocar, aprender y disfrutar juntos sobre el escenario. Cada voz y cada instrumento forman parte de The Navies con el mismo peso.</p>
       </div>
       <div class="members">
-        <article class="member reveal" role="button" tabindex="0" data-member="vocals"><div class="avatar"><span class="instrument-word" data-i18n="visualVocals">VOCES</span></div><div><h3 data-i18n="groupVocals">3 cantantes</h3><p data-i18n="groupVocalsCopy">Tres voces para melodías, armonías y coros.</p></div></article>
-        <article class="member reveal" role="button" tabindex="0" data-member="bass"><div class="avatar alt"><span class="instrument-word" data-i18n="visualBass">BAJO</span></div><div><h3 data-i18n="groupBass">1 bajista</h3><p data-i18n="groupBassCopy">La base grave que une ritmo y armonía.</p></div></article>
-        <article class="member reveal" role="button" tabindex="0" data-member="guitar"><div class="avatar warm"><span class="instrument-word" data-i18n="visualGuitar">GUITARRA</span></div><div><h3 data-i18n="groupGuitar">1 guitarrista</h3><p data-i18n="groupGuitarCopy">Riffs, acordes y el carácter rock del grupo.</p></div></article>
-        <article class="member reveal" role="button" tabindex="0" data-member="keys"><div class="avatar pale"><span class="instrument-word" data-i18n="visualKeys">TECLADOS</span></div><div><h3 data-i18n="groupKeys">1 teclista</h3><p data-i18n="groupKeysCopy">Pianos, sintetizadores y capas de sonido.</p></div></article>
-        <article class="member reveal" role="button" tabindex="0" data-member="drums"><div class="avatar"><span class="instrument-word" data-i18n="visualDrums">BATERÍA</span></div><div><h3 data-i18n="groupDrums">1 batería</h3><p data-i18n="groupDrumsCopy">El pulso que sostiene y empuja todo el directo.</p></div></article>
+        <article class="member reveal" role="button" tabindex="0" data-member="vocals"><div class="avatar"><span class="instrument-word" data-i18n="visualVocals">VOCES</span></div><div><h3 data-i18n="groupVocals">tres cantantes</h3><p data-i18n="groupVocalsCopy">Tres voces para melodías, armonías y coros.</p></div></article>
+        <article class="member reveal" role="button" tabindex="0" data-member="bass"><div class="avatar alt"><span class="instrument-word" data-i18n="visualBass">BAJO</span></div><div><h3 data-i18n="groupBass">una bajista</h3><p data-i18n="groupBassCopy">La base grave que une ritmo y armonía.</p></div></article>
+        <article class="member reveal" role="button" tabindex="0" data-member="guitar"><div class="avatar warm"><span class="instrument-word" data-i18n="visualGuitar">GUITARRA</span></div><div><h3 data-i18n="groupGuitar">un guitarrista</h3><p data-i18n="groupGuitarCopy">Riffs, acordes y el carácter rock del grupo.</p></div></article>
+        <article class="member reveal" role="button" tabindex="0" data-member="keys"><div class="avatar pale"><span class="instrument-word" data-i18n="visualKeys">TECLADOS</span></div><div><h3 data-i18n="groupKeys">un teclista</h3><p data-i18n="groupKeysCopy">Pianos, sintetizadores y capas de sonido.</p></div></article>
+        <article class="member reveal" role="button" tabindex="0" data-member="drums"><div class="avatar"><span class="instrument-word" data-i18n="visualDrums">BATERÍA</span></div><div><h3 data-i18n="groupDrums">un batería</h3><p data-i18n="groupDrumsCopy">El pulso que sostiene y empuja todo el directo.</p></div></article>
       </div>
     </section>
 
@@ -189,6 +189,6 @@
     <p>© <span id="year"></span> The Navies</p>
   </footer>
 
-  <script src="script.js?v=20261018.13"></script>
+  <script src="script.js?v=20261018.17"></script>
 </body>
 </html>
