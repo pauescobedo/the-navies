@@ -100,4 +100,15 @@ body.route-space .site-header { background:rgba(244,246,245,.9); border-bottom-c
 @media (max-width:900px) {
   body.route-media #main-nav,
   body.route-media .mobile-nav-overlay { color:white; background:radial-gradient(ellipse 44% 30% at 8% 18%,color-mix(in srgb,var(--accent) 20%,transparent),transparent 72%),radial-gradient(ellipse 42% 34% at 94% 78%,color-mix(in srgb,var(--accent) 17%,transparent),transparent 74%),#091b2a; }
+  body.route-media #main-nav > a:not(.nav-cta),
+  body.route-media .mobile-nav-overlay > a:not(.nav-cta),
+  body.route-media #main-nav > a.active:not(.nav-cta),
+  body.route-media .mobile-nav-overlay > a.active:not(.nav-cta),
+  body.route-media .site-header .brand { color:white!important; }
+  body.route-media #main-nav::after,
+  body.route-media .mobile-nav-overlay::after { color:rgba(255,255,255,.62); }
+  body.route-media #page-navies-live,
+  body.route-media #page-navies-live h1,
+  body.route-media #page-navies-live p,
+  body.route-media #page-navies-live .eyebrow { color:white!important; }
 }
