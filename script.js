@@ -175,10 +175,10 @@ function setSeason(season, persist = true) {
   const seasonalIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#173c5b"/><circle cx="50" cy="14" r="6" fill="${seasonThemes[selected].color}"/><text x="9" y="42" fill="#fff" font-family="Arial,Helvetica,sans-serif" font-size="28" font-weight="700" letter-spacing="-2">TN</text></svg>`;
   document.querySelector('link[rel="icon"]').href = `data:image/svg+xml,${encodeURIComponent(seasonalIcon)}`;
   document.querySelectorAll('.season-option').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.season === selected)));
-  if (persist) localStorage.removeItem('the-navies-season');
+  if (persist) sessionStorage.setItem('the-navies-season', selected);
 }
 localStorage.removeItem('the-navies-season');
-setSeason('autumn', false);
+setSeason(window.__naviesInitialSeason || sessionStorage.getItem('the-navies-season') || 'autumn', false);
 requestAnimationFrame(() => document.documentElement.classList.add('theme-ready'));
 seasonControl.querySelectorAll('.season-option').forEach((button) => button.addEventListener('click', () => setSeason(button.dataset.season)));
 Object.assign(translations.es, { navVideos:'Navies Live', time:'13:00 h', tvSoonTitle:'Estamos afinando<br><em>la pantalla.</em>', tvSoonCopy:'Próximamente publicaremos aquí los primeros vídeos de The Navies.' });
