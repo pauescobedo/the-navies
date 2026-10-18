@@ -99,11 +99,5 @@ loginForm.addEventListener('submit', (event) => {
   }
 });
 
-document.querySelector('#logout-button').addEventListener('click', () => {
-  window.naviesLogout();
-  loginForm.reset();
-  syncPortal();
-});
-
 window.addEventListener('navies-auth-change', syncPortal);
 syncPortal();

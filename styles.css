@@ -285,6 +285,7 @@ footer > p:last-of-type { justify-self: end; }
   .login-link { display: none; }
   .header-icon { width: 40px; height: 40px; }
   .language-trigger { min-width: 78px; height: 40px; padding: 0 11px; }
+  .language-menu { left:0; right:auto; }
   .menu-toggle span:not(.sr-only) { width: 17px; height: 1px; background: var(--ink); transition: transform .25s, opacity .25s; }
   .menu-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(5px) rotate(45deg); }.menu-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }.menu-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-5px) rotate(-45deg); }
   body.menu-open .site-header { z-index:60; background:transparent; border-color:transparent; box-shadow:none; backdrop-filter:none; }

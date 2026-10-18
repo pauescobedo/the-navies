@@ -5,6 +5,7 @@ const navigationParent = navigation.parentNode;
 const navigationNextSibling = navigation.nextSibling;
 let navigationRestoreTimer;
 let lastScrollY = window.scrollY;
+let keepHeaderVisibleUntil = 0;
 
 function restoreNavigation() {
   clearTimeout(navigationRestoreTimer);
@@ -13,6 +14,8 @@ function restoreNavigation() {
 }
 
 function closeMenu() {
+  keepHeaderVisibleUntil = Date.now() + 700;
+  siteHeader.classList.remove('header-hidden');
   menuButton.setAttribute('aria-expanded', 'false');
   navigation.classList.remove('open');
   document.body.classList.remove('menu-open');
@@ -37,9 +40,14 @@ menuButton.addEventListener('click', () => {
   document.body.classList.add('menu-open');
 });
 
-navigation.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => {
+navigation.querySelectorAll('a').forEach((link) => link.addEventListener('click', (event) => {
   sessionStorage.setItem('the-navies-internal-navigation', '1');
   closeMenu();
+  const destination = link.getAttribute('href');
+  if (destination && destination.endsWith('.html')) {
+    event.preventDefault();
+    window.location.assign(destination);
+  }
 }));
 document.addEventListener('click', (event) => {
   const brand = event.target.closest('a.brand');
@@ -50,7 +58,9 @@ document.addEventListener('click', (event) => {
     document.querySelector('#inicio')?.scrollIntoView({ behavior:'smooth', block:'start' });
     return;
   }
+  event.preventDefault();
   sessionStorage.setItem('the-navies-internal-navigation', '1');
+  window.location.assign(brand.getAttribute('href'));
 });
 window.addEventListener('resize', () => {
   if (!window.matchMedia('(max-width: 900px)').matches) {
@@ -64,7 +74,7 @@ window.addEventListener('scroll', () => {
   const movingDown = currentScrollY > lastScrollY + 6;
   const movingUp = currentScrollY < lastScrollY - 6;
   siteHeader.classList.toggle('header-scrolled', currentScrollY > 20);
-  if (currentScrollY < 110 || menuButton.getAttribute('aria-expanded') === 'true') {
+  if (currentScrollY < 110 || menuButton.getAttribute('aria-expanded') === 'true' || Date.now() < keepHeaderVisibleUntil) {
     siteHeader.classList.remove('header-hidden');
   } else if (movingDown) {
     siteHeader.classList.add('header-hidden');
