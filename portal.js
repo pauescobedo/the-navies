@@ -40,7 +40,7 @@ document.querySelectorAll('[data-score-song]').forEach((container) => {
     const source = `${scoreRoot}/${song}/${filename}`;
     const item = document.createElement('span');
     item.className = 'score-file';
-    item.innerHTML = `<button class="score-open" type="button" data-score-src="${source}" data-score-title="${songTitle} · ${label}">${label}</button>`;
+    item.innerHTML = `<a class="score-open" href="${source}" target="_blank" rel="noopener" aria-label="Abrir ${songTitle} · ${label} en una pestaña nueva">${label}</a>`;
     container.append(item);
   });
   const audioSource = `${audioRoot}/${song}.mp3`;
@@ -56,31 +56,6 @@ document.querySelectorAll('[data-score-song]').forEach((container) => {
   audioButton.setAttribute('aria-label', `Escuchar ${songTitle}`);
   audioButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7.4v9.2L17 12 9 7.4Z"></path></svg>';
   container.append(audioButton);
-});
-
-const scoreDialog = document.querySelector('#score-dialog');
-const scoreFrame = document.querySelector('#score-frame');
-const scoreDialogTitle = document.querySelector('#score-dialog-title');
-const scoreDialogDownload = document.querySelector('#score-dialog-download');
-document.querySelectorAll('.score-open').forEach((button) => button.addEventListener('click', () => {
-  scoreDialogTitle.textContent = button.dataset.scoreTitle;
-  const pdfView = window.matchMedia('(max-width: 600px)').matches ? 'Fit' : 'FitH';
-  scoreFrame.src = `${button.dataset.scoreSrc}#page=1&view=${pdfView}`;
-  scoreDialogDownload.href = button.dataset.scoreSrc;
-  scoreDialogDownload.setAttribute('download', '');
-  document.body.classList.add('score-viewer-open');
-  scoreDialog.showModal();
-}));
-function closeScoreDialog() {
-  scoreFrame.src = '';
-  document.body.classList.remove('score-viewer-open');
-  scoreDialog.close();
-}
-document.querySelector('.score-dialog-close').addEventListener('click', closeScoreDialog);
-scoreDialog.addEventListener('click', (event) => {
-  if (event.target === scoreDialog) {
-    closeScoreDialog();
-  }
 });
 
 const audioDialog = document.querySelector('#audio-dialog');
