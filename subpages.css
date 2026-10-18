@@ -82,13 +82,9 @@
   .subpage { padding-top:76px; }.subpage .site-header nav { color:var(--ink-deep); }.media-page .site-header nav { color:white; background:rgba(7,22,34,.98); }
   .media-page .site-header nav > a:not(.nav-cta) { border-color:rgba(255,255,255,.18); background:rgba(255,255,255,.07); }
   .media-page .site-header nav > a.active:not(.nav-cta) { color:var(--accent-contrast); border-color:var(--accent); background:var(--accent); }
+  .media-page .site-header nav::after { color:rgba(255,255,255,.58); }
   .video-grid { grid-template-columns:1fr 1fr; }.dashboard-grid { grid-template-columns:1fr; }.space-entry { grid-template-columns:1fr; }.login-form { grid-template-columns:1fr; }.login-form button { min-height:50px; }
 }
 @media (max-width:600px) {
-  .subpage-intro { padding-top:62px; text-align:center; }.subpage-intro .eyebrow { justify-content:center; }.subpage-intro > p:last-child { margin-left:auto; margin-right:auto; }
-  .tv-coming-soon { justify-items:center; text-align:center; padding-left:22px; padding-right:22px; }.tv-coming-soon .eyebrow { justify-content:center; }.tv-coming-soon > p { margin-left:auto; margin-right:auto; }
-  .featured-video { min-height:420px; margin:0 12px; border-radius:24px; }.featured-video-copy { text-align:center; }.featured-video-copy p { margin-left:auto; margin-right:auto; }
-  .video-library { padding-left:18px; padding-right:18px; }.video-row-head { align-items:center; }.video-grid { grid-template-columns:1fr; }.video-card { text-align:center; align-items:center; }
-  .space-shell { padding-left:18px; padding-right:18px; }.space-intro, .login-panel { text-align:center; }.space-intro .eyebrow { justify-content:center; }.space-intro p { margin-left:auto; margin-right:auto; }.login-form input { text-align:left; }
-  .dashboard-bar { align-items:center; flex-direction:column; gap:18px; text-align:center; }.dashboard-bar .eyebrow { justify-content:center; }.private-card { border-radius:20px; }.card-heading { display:grid; justify-items:center; text-align:center; }.concert-status { justify-self:center; }.private-card > p { text-align:center; }.song-row { grid-template-columns:26px 1fr; }.material-tags { grid-column:2; justify-content:flex-start; }
+  .subpage-intro { padding-top:62px; }.featured-video { min-height:420px; margin:0 12px; border-radius:24px; }.video-library { padding-left:18px; padding-right:18px; }.video-grid { grid-template-columns:1fr; }.space-shell { padding-left:18px; padding-right:18px; }.dashboard-bar { align-items:flex-start; gap:18px; }.private-card { border-radius:20px; }.card-heading { display:grid; }.concert-status { justify-self:start; }.song-row { grid-template-columns:26px 1fr; }.material-tags { grid-column:2; justify-content:flex-start; }
 }
