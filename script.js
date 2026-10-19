@@ -254,7 +254,7 @@ function setSeason(season, persist = true) {
   const selected = seasonThemes[season] ? season : 'autumn';
   document.documentElement.dataset.season = selected;
   document.documentElement.style.setProperty('--accent', seasonThemes[selected].color);
-  const seasonalIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#173c5b"/><circle cx="50" cy="14" r="6" fill="${seasonThemes[selected].color}"/><text x="9" y="42" fill="#fff" font-family="Arial,Helvetica,sans-serif" font-size="28" font-weight="700" letter-spacing="-2">TN</text></svg>`;
+  const seasonalIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#173c5b"/><circle cx="50" cy="14" r="6" fill="${seasonThemes[selected].color}"/><text x="9" y="42" fill="#fff" font-family="Arial,Helvetica,sans-serif" font-size="28" font-weight="700" letter-spacing="-2">TN</text></svg>`;
   document.querySelector('link[rel="icon"]').href = `data:image/svg+xml,${encodeURIComponent(seasonalIcon)}`;
   document.querySelectorAll('.season-option').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.season === selected)));
   if (persist) localStorage.setItem('the-navies-season', selected);
@@ -273,7 +273,7 @@ function closeLanguageMenu() {
   languageTrigger.setAttribute('aria-expanded', 'false');
   languageMenu.hidden = true;
 }
-function setLanguage(language) {
+function setLanguage(language, persist = false) {
   const copy = translations[language] || translations.es;
   currentLanguage = language;
   document.documentElement.lang = language;
@@ -283,15 +283,20 @@ function setLanguage(language) {
   languageTrigger.querySelector('.flag').className = `flag flag-${language}`;
   languageTrigger.querySelector('strong').textContent = activeOption.querySelector('small').textContent;
   languageOptions.forEach((option) => option.setAttribute('aria-selected', String(option === activeOption)));
-  localStorage.setItem('the-navies-language', language);
+  if (persist) {
+    localStorage.setItem('the-navies-language', language);
+    localStorage.setItem('the-navies-language-manual', '1');
+  }
   if (document.querySelector('#account-dialog')) updateAccountUI();
 }
 const savedLanguage = localStorage.getItem('the-navies-language');
+const hasManualLanguage = localStorage.getItem('the-navies-language-manual') === '1';
 const supportedLanguages = Object.keys(translations);
-const browserLanguage = (navigator.languages || [navigator.language || 'es'])
+const browserLanguage = [navigator.language, ...(navigator.languages || [])]
+  .filter(Boolean)
   .map((language) => language.toLowerCase().split('-')[0])
   .find((language) => supportedLanguages.includes(language)) || 'es';
-setLanguage(savedLanguage && supportedLanguages.includes(savedLanguage) ? savedLanguage : browserLanguage);
+setLanguage(hasManualLanguage && savedLanguage && supportedLanguages.includes(savedLanguage) ? savedLanguage : browserLanguage);
 languageTrigger.addEventListener('click', () => {
   const opening = languageTrigger.getAttribute('aria-expanded') !== 'true';
   languageTrigger.setAttribute('aria-expanded', String(opening));
@@ -299,7 +304,7 @@ languageTrigger.addEventListener('click', () => {
   if (opening) languageOptions.find((option) => option.getAttribute('aria-selected') === 'true').focus();
 });
 languageOptions.forEach((option) => option.addEventListener('click', () => {
-  setLanguage(option.dataset.language);
+  setLanguage(option.dataset.language, true);
   closeLanguageMenu();
   languageTrigger.focus();
 }));
