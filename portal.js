@@ -9,8 +9,6 @@ localStorage.removeItem('navies-demo-member');
 
 const scoreRoot = 'scores';
 const audioRoot = 'audios';
-const pdfsOpenOutsideApp = window.matchMedia('(max-width: 900px)').matches &&
-  (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true);
 const scoreLibrary = {
   'shake-it-off': [
     ['General', 'general.pdf'], ['Letra', 'letra.pdf'], ['Acordes', 'acordes.pdf'], ['Teclado', 'teclado.pdf'], ['Bajo', 'bajo.pdf']
@@ -42,8 +40,7 @@ document.querySelectorAll('[data-score-song]').forEach((container) => {
     const source = `${scoreRoot}/${song}/${filename}`;
     const item = document.createElement('span');
     item.className = 'score-file';
-    const target = pdfsOpenOutsideApp ? '_blank' : '_self';
-    item.innerHTML = `<a class="score-open" href="${source}" target="${target}" rel="noopener" aria-label="Abrir ${songTitle} · ${label}">${label}</a>`;
+    item.innerHTML = `<a class="score-open" href="${source}" target="_blank" rel="noopener" aria-label="Abrir ${songTitle} · ${label}">${label}</a>`;
     container.append(item);
   });
   const audioSource = `${audioRoot}/${song}.mp3`;
