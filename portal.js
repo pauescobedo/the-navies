@@ -1,5 +1,6 @@
 const loginPanel = document.querySelector('#login');
 const dashboard = document.querySelector('#member-dashboard');
+const spaceEntry = document.querySelector('.space-entry');
 const loginForm = document.querySelector('#login-form');
 const loginError = document.querySelector('#login-error');
 const memberName = document.querySelector('#member-name');
@@ -78,13 +79,43 @@ function closeAudioDialog() {
 document.querySelector('.audio-dialog-close').addEventListener('click', closeAudioDialog);
 audioDialog.addEventListener('click', (event) => { if (event.target === audioDialog) closeAudioDialog(); });
 
-function syncPortal() {
-  const member = localStorage.getItem('navies-member-session');
-  const isLoggedIn = ['pauescobedo', 'marionaescobedo', 'paufermosel', 'candelagonzalez', 'carlesgonzalez', 'ainasalmeron'].includes(member);
+let portalReady = false;
+let portalTransitionTimer;
+
+function applyPortalState(isLoggedIn) {
   loginPanel.hidden = isLoggedIn;
   dashboard.hidden = !isLoggedIn;
   document.querySelector('.space-shell').classList.toggle('is-authenticated', isLoggedIn);
+}
+
+function syncPortal() {
+  const member = localStorage.getItem('navies-member-session');
+  const isLoggedIn = ['pauescobedo', 'marionaescobedo', 'paufermosel', 'candelagonzalez', 'carlesgonzalez', 'ainasalmeron'].includes(member);
   if (isLoggedIn) memberName.textContent = window.naviesMemberName(member);
+
+  if (!portalReady) {
+    applyPortalState(isLoggedIn);
+    portalReady = true;
+    return;
+  }
+
+  clearTimeout(portalTransitionTimer);
+  const outgoing = isLoggedIn ? spaceEntry : dashboard;
+  const incoming = isLoggedIn ? dashboard : spaceEntry;
+  if (outgoing.hidden) {
+    applyPortalState(isLoggedIn);
+    return;
+  }
+
+  outgoing.classList.add('portal-leaving');
+  portalTransitionTimer = setTimeout(() => {
+    outgoing.classList.remove('portal-leaving');
+    applyPortalState(isLoggedIn);
+    incoming.classList.remove('portal-entering');
+    void incoming.offsetWidth;
+    incoming.classList.add('portal-entering');
+    incoming.addEventListener('animationend', () => incoming.classList.remove('portal-entering'), { once:true });
+  }, 210);
 }
 
 loginForm.addEventListener('submit', (event) => {
@@ -93,7 +124,6 @@ loginForm.addEventListener('submit', (event) => {
   if (window.naviesLogin(data.get('username'), data.get('password'))) {
     loginError.textContent = '';
     event.currentTarget.reset();
-    syncPortal();
     if (window.matchMedia('(max-width: 900px)').matches) {
       requestAnimationFrame(() => window.scrollTo({ top:0, left:0, behavior:'instant' }));
     }

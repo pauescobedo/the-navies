@@ -58,6 +58,7 @@ function routeFromHash() {
 
 function showPage(route, updateHistory = true) {
   const selectedRoute = routeDetails[route] ? route : 'home';
+  document.documentElement.dataset.route = selectedRoute;
   pageViews.forEach((view) => { view.hidden = view.dataset.pageView !== selectedRoute; });
   navigation.querySelectorAll('[data-route]').forEach((link) => {
     link.classList.toggle('active', link.dataset.route === selectedRoute);
@@ -90,23 +91,142 @@ window.addEventListener('resize', () => {
   }
 });
 
+let headerScrollFrame = null;
 window.addEventListener('scroll', () => {
-  const currentScrollY = window.scrollY;
-  const movingDown = currentScrollY > lastScrollY + 6;
-  const movingUp = currentScrollY < lastScrollY - 6;
-  siteHeader.classList.toggle('header-scrolled', currentScrollY > 20);
-  if (currentScrollY < 110 || menuButton.getAttribute('aria-expanded') === 'true' || Date.now() < keepHeaderVisibleUntil) {
-    siteHeader.classList.remove('header-hidden');
-  } else if (movingDown) {
-    siteHeader.classList.add('header-hidden');
-  } else if (movingUp) {
-    siteHeader.classList.remove('header-hidden');
-  }
-  lastScrollY = currentScrollY;
+  if (headerScrollFrame !== null) return;
+  headerScrollFrame = requestAnimationFrame(() => {
+    const currentScrollY = window.scrollY;
+    const movingDown = currentScrollY > lastScrollY + 5;
+    const movingUp = currentScrollY < lastScrollY - 5;
+    siteHeader.classList.toggle('header-scrolled', currentScrollY > 20);
+    if (currentScrollY < 110 || menuButton.getAttribute('aria-expanded') === 'true' || Date.now() < keepHeaderVisibleUntil) {
+      siteHeader.classList.remove('header-hidden');
+    } else if (movingDown) {
+      siteHeader.classList.add('header-hidden');
+    } else if (movingUp) {
+      siteHeader.classList.remove('header-hidden');
+    }
+    lastScrollY = currentScrollY;
+    headerScrollFrame = null;
+  });
 }, { passive: true });
 
+const smoothWheelEnabled = window.matchMedia('(pointer:fine)').matches && !window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+let smoothWheelFrame = null;
+let smoothWheelTarget = window.scrollY;
+let smoothWheelPosition = window.scrollY;
+
+function stopSmoothWheel() {
+  if (smoothWheelFrame !== null) cancelAnimationFrame(smoothWheelFrame);
+  smoothWheelFrame = null;
+  smoothWheelTarget = window.scrollY;
+  smoothWheelPosition = window.scrollY;
+}
+
+function animateSmoothWheel() {
+  const distance = smoothWheelTarget - smoothWheelPosition;
+  smoothWheelPosition += distance * .19;
+  window.scrollTo({ top:smoothWheelPosition, left:0, behavior:'instant' });
+  if (Math.abs(distance) > .45) smoothWheelFrame = requestAnimationFrame(animateSmoothWheel);
+  else {
+    window.scrollTo({ top:smoothWheelTarget, left:0, behavior:'instant' });
+    smoothWheelPosition = smoothWheelTarget;
+    smoothWheelFrame = null;
+  }
+}
+
+if (smoothWheelEnabled) {
+  window.addEventListener('wheel', (event) => {
+    if (event.ctrlKey || event.metaKey || document.querySelector('dialog[open]')) return;
+    const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    const rawDelta = event.deltaMode === 1 ? event.deltaY * 18 : event.deltaMode === 2 ? event.deltaY * window.innerHeight : event.deltaY;
+    const delta = Math.max(-150, Math.min(150, rawDelta));
+    const distanceToEdge = delta > 0 ? maxScroll - smoothWheelTarget : smoothWheelTarget;
+    const braking = distanceToEdge < 300 ? Math.max(.38, distanceToEdge / 300) : 1;
+    smoothWheelTarget = Math.max(0, Math.min(maxScroll, smoothWheelTarget + delta * braking));
+    event.preventDefault();
+    if (smoothWheelFrame === null) {
+      smoothWheelPosition = window.scrollY;
+      smoothWheelFrame = requestAnimationFrame(animateSmoothWheel);
+    }
+  }, { passive:false });
+  window.addEventListener('mousedown', (event) => { if (event.button === 0) stopSmoothWheel(); }, { passive:true });
+  window.addEventListener('keydown', stopSmoothWheel);
+  window.addEventListener('resize', stopSmoothWheel, { passive:true });
+  window.addEventListener('scroll', () => {
+    if (smoothWheelFrame === null) {
+      smoothWheelTarget = window.scrollY;
+      smoothWheelPosition = window.scrollY;
+    }
+  }, { passive:true });
+}
+
+const smoothTouchEnabled = window.matchMedia('(pointer:coarse)').matches && !window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+let touchLastY = 0;
+let touchLastX = 0;
+let touchLastTime = 0;
+let touchVelocity = 0;
+let touchIsScrolling = false;
+let touchInertiaFrame = null;
+
+function stopTouchInertia() {
+  if (touchInertiaFrame !== null) cancelAnimationFrame(touchInertiaFrame);
+  touchInertiaFrame = null;
+  touchVelocity = 0;
+}
+
+function runTouchInertia() {
+  const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+  const direction = Math.sign(touchVelocity);
+  const distanceToEdge = direction > 0 ? maxScroll - window.scrollY : window.scrollY;
+  const braking = distanceToEdge < 180 ? Math.max(.52, distanceToEdge / 180) : 1;
+  touchVelocity *= .88 * braking;
+  const nextPosition = Math.max(0, Math.min(maxScroll, window.scrollY + touchVelocity * 16));
+  window.scrollTo({ top:nextPosition, left:0, behavior:'instant' });
+  if (Math.abs(touchVelocity) > .055 && nextPosition > 0 && nextPosition < maxScroll) touchInertiaFrame = requestAnimationFrame(runTouchInertia);
+  else stopTouchInertia();
+}
+
+if (smoothTouchEnabled) {
+  window.addEventListener('touchstart', (event) => {
+    if (event.touches.length !== 1 || document.querySelector('dialog[open]')) return;
+    stopTouchInertia();
+    touchLastY = event.touches[0].clientY;
+    touchLastX = event.touches[0].clientX;
+    touchLastTime = performance.now();
+    touchIsScrolling = false;
+  }, { passive:true });
+  window.addEventListener('touchmove', (event) => {
+    if (event.touches.length !== 1 || document.querySelector('dialog[open]')) return;
+    const currentY = event.touches[0].clientY;
+    const currentX = event.touches[0].clientX;
+    const verticalDelta = touchLastY - currentY;
+    const horizontalDelta = touchLastX - currentX;
+    if (!touchIsScrolling && Math.abs(horizontalDelta) > Math.abs(verticalDelta)) return;
+    touchIsScrolling = true;
+    const now = performance.now();
+    const elapsed = Math.max(8, now - touchLastTime);
+    const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    const distanceToEdge = verticalDelta > 0 ? maxScroll - window.scrollY : window.scrollY;
+    const braking = distanceToEdge < 180 ? Math.max(.56, distanceToEdge / 180) : 1;
+    const adjustedDelta = verticalDelta * braking;
+    window.scrollTo({ top:Math.max(0, Math.min(maxScroll, window.scrollY + adjustedDelta)), left:0, behavior:'instant' });
+    touchVelocity = Math.max(-1.35, Math.min(1.35, adjustedDelta / elapsed));
+    touchLastY = currentY;
+    touchLastX = currentX;
+    touchLastTime = now;
+    event.preventDefault();
+  }, { passive:false });
+  window.addEventListener('touchend', () => {
+    if (performance.now() - touchLastTime > 90) touchVelocity = 0;
+    if (touchIsScrolling && Math.abs(touchVelocity) > .055) touchInertiaFrame = requestAnimationFrame(runTouchInertia);
+    touchIsScrolling = false;
+  }, { passive:true });
+  window.addEventListener('touchcancel', stopTouchInertia, { passive:true });
+}
+
 const translations = {
-  es: { navLive:'Directo', navSound:'Sonido', navBand:'La banda', navContact:'Contacto', heroTitle:'Clásicos de siempre.<br><em>En directo, como nunca.</em>', heroIntro:'Somos siete músicos jóvenes unidos por las ganas de tocar en directo y llevar clásicos del rock y del pop a cada escenario con energía y personalidad.', nextShow:'Próximo concierto', hireBand:'Contrata a la banda', liveLabel:'En directo', liveTitle:'Nuestro próximo concierto<br>empieza aquí.', comingSoon:'Próximamente', venue:'Plaza Masadas', time:'13:00 h', onlyDate:'Por ahora, esta es nuestra única fecha anunciada.', soundLabel:'Nuestro sonido', soundBody:'Una mezcla de clásicos del rock, grandes canciones pop y esos himnos que todo el mundo reconoce desde el primer acorde. Siete músicos, voces compartidas y un directo pensado para conectar, cantar y disfrutar juntos.', examples:'Ejemplos de repertorio', exampleNote:'Ejemplos orientativos; el repertorio puede variar.', bandTitle:'Siete músicos.<br>Una sola corriente.', bandBody:'Somos siete jóvenes apasionados por la música, unidos por las ganas de tocar, aprender y disfrutar juntos sobre el escenario.', vocals:'Voz', bass:'Bajo', guitar:'Guitarra', keys:'Teclados', drums:'Batería', contactTitle:'Hablemos.', contactBody:'Si quieres contarnos una propuesta o hablar con nosotros, escríbenos.' },
+  es: { navLive:'Directo', navSound:'Sonido', navBand:'La banda', navContact:'Contacto', heroTitle:'Clásicos de siempre.<br><em>En directo, como nunca.</em>', heroIntro:'Somos siete músicos jóvenes unidos por las ganas de tocar en directo y llevar clásicos del rock y del pop a cada escenario con energía y personalidad.', nextShow:'Próximo concierto', hireBand:'Contrata a la banda', liveLabel:'En directo', liveTitle:'Nuestro próximo concierto<br>empieza aquí.', comingSoon:'Próximamente', venue:'Plaza Masadas', time:'13:00h', onlyDate:'Por ahora, esta es nuestra única fecha anunciada.', soundLabel:'Nuestro sonido', soundBody:'Una mezcla de clásicos del rock, grandes canciones pop y esos himnos que todo el mundo reconoce desde el primer acorde. Siete músicos, voces compartidas y un directo pensado para conectar, cantar y disfrutar juntos.', examples:'Ejemplos de repertorio', exampleNote:'Ejemplos orientativos; el repertorio puede variar.', bandTitle:'Siete músicos.<br>Una sola corriente.', bandBody:'Somos siete jóvenes apasionados por la música, unidos por las ganas de tocar, aprender y disfrutar juntos sobre el escenario.', vocals:'Voz', bass:'Bajo', guitar:'Guitarra', keys:'Teclados', drums:'Batería', contactTitle:'Hablemos.', contactBody:'Si quieres contarnos una propuesta o hablar con nosotros, escríbenos.' },
   ca: { navLive:'Directe', navSound:'So', navBand:'La banda', navContact:'Contacte', heroTitle:'Clàssics de sempre.<br><em>En directe, com mai.</em>', heroIntro:'Som set músics joves units per les ganes de tocar en directe i portar clàssics del rock i del pop a cada escenari amb energia i personalitat.', nextShow:'Pròxim concert', hireBand:'Contracta la banda', liveLabel:'En directe', liveTitle:'El nostre pròxim concert<br>comença aquí.', comingSoon:'Pròximament', venue:'Plaça Masadas', time:'13:00 h', onlyDate:'De moment, aquesta és l’única data anunciada.', soundLabel:'El nostre so', soundBody:'Una barreja de clàssics del rock, grans cançons pop i aquells himnes que tothom reconeix des del primer acord. Set músics, veus compartides i un directe pensat per connectar, cantar i gaudir junts.', examples:'Exemples de repertori', exampleNote:'Exemples orientatius; el repertori pot variar.', bandTitle:'Set músics.<br>Un sol corrent.', bandBody:'Tres cantants al davant i una banda completa al darrere. The Navies recupera grans cançons respectant-ne l’essència, amb personalitat pròpia i l’energia de set músics tocant junts.', vocals:'Veu', bass:'Baix', guitar:'Guitarra', keys:'Teclats', drums:'Bateria', contactTitle:'Muntem<br>la pròxima?', contactBody:'Concerts, sales, festes de barri, festivals i esdeveniments. Escriu-nos i en parlem.' },
   en: { navLive:'Live', navSound:'Sound', navBand:'The band', navContact:'Contact', heroTitle:'Timeless classics.<br><em>Live like never before.</em>', heroIntro:'We are seven young musicians brought together by a love of playing live and bringing rock and pop classics to every stage with energy and personality.', nextShow:'Next show', hireBand:'Book the band', liveLabel:'Live', liveTitle:'The next show<br>starts here.', comingSoon:'Coming up', venue:'Plaça Masadas', time:'1:00 pm', onlyDate:'For now, this is our only announced date.', soundLabel:'Our sound', soundBody:'A mix of rock classics, great pop songs and anthems everyone knows from the first chord. Seven musicians, shared vocals and a live show made for connecting, singing and enjoying together.', examples:'Setlist examples', exampleNote:'Illustrative examples; the setlist may vary.', bandTitle:'Seven musicians.<br>One current.', bandBody:'Three singers out front and a full band behind them. The Navies brings great songs back with respect for their essence, a personality of our own and the energy of seven musicians playing together.', vocals:'Vocals', bass:'Bass', guitar:'Guitar', keys:'Keys', drums:'Drums', contactTitle:'Shall we plan<br>the next one?', contactBody:'Concerts, venues, neighbourhood parties, festivals and events. Get in touch and let’s talk.' },
   it: { navLive:'Dal vivo', navSound:'Suono', navBand:'La band', navContact:'Contatti', heroTitle:'Classici senza tempo.<br><em>Dal vivo, come mai prima.</em>', heroIntro:'Siamo sette giovani musicisti uniti dalla voglia di suonare dal vivo e portare i classici del rock e del pop su ogni palco con energia e personalità.', nextShow:'Prossimo concerto', hireBand:'Ingaggia la band', liveLabel:'Dal vivo', liveTitle:'Il nostro prossimo concerto<br>inizia qui.', comingSoon:'Prossimamente', venue:'Plaça Masadas', time:'13:00', onlyDate:'Per ora, questa è la nostra unica data annunciata.', soundLabel:'Il nostro suono', soundBody:'Un mix di classici del rock, grandi canzoni pop e inni che tutti riconoscono dal primo accordo. Sette musicisti, voci condivise e un live fatto per incontrarsi, cantare e divertirsi insieme.', examples:'Esempi di repertorio', exampleNote:'Esempi indicativi; il repertorio può variare.', bandTitle:'Sette musicisti.<br>Un’unica corrente.', bandBody:'Tre cantanti davanti e una band completa alle spalle. The Navies ripropone grandi canzoni rispettandone l’essenza, con una personalità propria e l’energia di sette musicisti che suonano insieme.', vocals:'Voce', bass:'Basso', guitar:'Chitarra', keys:'Tastiere', drums:'Batteria', contactTitle:'Organizziamo<br>la prossima?', contactBody:'Concerti, locali, feste di quartiere, festival ed eventi. Scrivici e parliamone.' },
@@ -124,11 +244,16 @@ Object.assign(translations.en, { soundSignature:'Seven musicians · One single s
 Object.assign(translations.it, { soundSignature:'Sette musicisti · Un unico palco' });
 Object.assign(translations.fr, { soundSignature:'Sept musiciens · Une seule scène' });
 
-Object.assign(translations.es, { genreLine:'Rock · Pop · Clásicos', christmasTitle:'Concierto de Navidad', datePending:'Fecha por confirmar', dateInfo:'Anunciaremos la fecha del concierto de Navidad próximamente.', classicRock:'ROCK CLÁSICO', stadiumRock:'ROCK DE ESTADIO', rockStyle:'Guitarras, raíces y canciones que nunca envejecen', popStyle:'Ritmo, melodía y un estribillo para cantar juntos', anthemStyle:'Teclados, épica y toda la energía del directo', meetMember:'Conócela ↗', meetMemberMale:'Conócelo ↗', memberLabel:'La banda', provisionalBio:'Biografía provisional.' });
-Object.assign(translations.ca, { genreLine:'Rock · Pop · Clàssics', christmasTitle:'Concert de Nadal', datePending:'Data per confirmar', dateInfo:'Anunciarem la data del concert de Nadal ben aviat.', classicRock:'ROCK CLÀSSIC', stadiumRock:'ROCK D’ESTADI', rockStyle:'Guitarres, arrels i cançons que mai no envelleixen', popStyle:'Ritme, melodia i una tornada per cantar plegats', anthemStyle:'Teclats, èpica i tota l’energia del directe', meetMember:'Coneix-la ↗', meetMemberMale:'Coneix-lo ↗', memberLabel:'La banda', provisionalBio:'Biografia provisional.' });
-Object.assign(translations.en, { genreLine:'Rock · Pop · Classics', christmasTitle:'Christmas Concert', datePending:'Date to be confirmed', dateInfo:'We’ll announce the Christmas concert date soon.', classicRock:'CLASSIC ROCK', stadiumRock:'STADIUM ROCK', rockStyle:'Guitars, roots and songs that never grow old', popStyle:'Rhythm, melody and a chorus made to sing together', anthemStyle:'Keys, drama and the full energy of a live show', meetMember:'Meet her ↗', meetMemberMale:'Meet him ↗', memberLabel:'The band', provisionalBio:'Provisional biography.' });
-Object.assign(translations.it, { genreLine:'Rock · Pop · Classici', christmasTitle:'Concerto di Natale', datePending:'Data da confermare', dateInfo:'Annunceremo presto la data del concerto di Natale.', classicRock:'ROCK CLASSICO', stadiumRock:'STADIUM ROCK', rockStyle:'Chitarre, radici e canzoni che non invecchiano mai', popStyle:'Ritmo, melodia e un ritornello da cantare insieme', anthemStyle:'Tastiere, epica e tutta l’energia del live', meetMember:'Conoscila ↗', meetMemberMale:'Conoscilo ↗', memberLabel:'La band', provisionalBio:'Biografia provvisoria.' });
-Object.assign(translations.fr, { genreLine:'Rock · Pop · Classiques', christmasTitle:'Concert de Noël', datePending:'Date à confirmer', dateInfo:'Nous annoncerons bientôt la date du concert de Noël.', classicRock:'ROCK CLASSIQUE', stadiumRock:'ROCK DE STADE', rockStyle:'Des guitares, des racines et des chansons qui ne vieillissent jamais', popStyle:'Du rythme, de la mélodie et un refrain à chanter ensemble', anthemStyle:'Des claviers, du souffle et toute l’énergie du direct', meetMember:'La découvrir ↗', meetMemberMale:'Le découvrir ↗', memberLabel:'Le groupe', provisionalBio:'Biographie provisoire.' });
+Object.assign(translations.es, { genreLine:'Rock · Pop · Clásicos', christmasTitle:'Concierto de Navidad', christmasMonth:'DIC', datePending:'Fecha provisional', dateInfo:'Anunciaremos la fecha del concierto de Navidad próximamente.', classicRock:'ROCK CLÁSICO', stadiumRock:'ROCK DE ESTADIO', rockStyle:'Guitarras, raíces y canciones que nunca envejecen', popStyle:'Ritmo, melodía y un estribillo para cantar juntos', anthemStyle:'Teclados, épica y toda la energía del directo', meetMember:'Conócela ↗', meetMemberMale:'Conócelo ↗', memberLabel:'La banda', provisionalBio:'Biografía provisional.' });
+Object.assign(translations.ca, { genreLine:'Rock · Pop · Clàssics', christmasTitle:'Concert de Nadal', christmasMonth:'DES', datePending:'Data provisional', dateInfo:'Anunciarem la data del concert de Nadal ben aviat.', classicRock:'ROCK CLÀSSIC', stadiumRock:'ROCK D’ESTADI', rockStyle:'Guitarres, arrels i cançons que mai no envelleixen', popStyle:'Ritme, melodia i una tornada per cantar plegats', anthemStyle:'Teclats, èpica i tota l’energia del directe', meetMember:'Coneix-la ↗', meetMemberMale:'Coneix-lo ↗', memberLabel:'La banda', provisionalBio:'Biografia provisional.' });
+Object.assign(translations.en, { genreLine:'Rock · Pop · Classics', christmasTitle:'Christmas Concert', christmasMonth:'DEC', datePending:'Provisional date', dateInfo:'We’ll announce the Christmas concert date soon.', classicRock:'CLASSIC ROCK', stadiumRock:'STADIUM ROCK', rockStyle:'Guitars, roots and songs that never grow old', popStyle:'Rhythm, melody and a chorus made to sing together', anthemStyle:'Keys, drama and the full energy of a live show', meetMember:'Meet her ↗', meetMemberMale:'Meet him ↗', memberLabel:'The band', provisionalBio:'Provisional biography.' });
+Object.assign(translations.it, { genreLine:'Rock · Pop · Classici', christmasTitle:'Concerto di Natale', christmasMonth:'DIC', datePending:'Data provvisoria', dateInfo:'Annunceremo presto la data del concerto di Natale.', classicRock:'ROCK CLASSICO', stadiumRock:'STADIUM ROCK', rockStyle:'Chitarre, radici e canzoni che non invecchiano mai', popStyle:'Ritmo, melodia e un ritornello da cantare insieme', anthemStyle:'Tastiere, epica e tutta l’energia del live', meetMember:'Conoscila ↗', meetMemberMale:'Conoscilo ↗', memberLabel:'La band', provisionalBio:'Biografia provvisoria.' });
+Object.assign(translations.fr, { genreLine:'Rock · Pop · Classiques', christmasTitle:'Concert de Noël', christmasMonth:'DÉC', datePending:'Date provisoire', dateInfo:'Nous annoncerons bientôt la date du concert de Noël.', classicRock:'ROCK CLASSIQUE', stadiumRock:'ROCK DE STADE', rockStyle:'Des guitares, des racines et des chansons qui ne vieillissent jamais', popStyle:'Du rythme, de la mélodie et un refrain à chanter ensemble', anthemStyle:'Des claviers, du souffle et toute l’énergie du direct', meetMember:'La découvrir ↗', meetMemberMale:'Le découvrir ↗', memberLabel:'Le groupe', provisionalBio:'Biographie provisoire.' });
+Object.assign(translations.es, { sagreraHomeName:'Fiestas de La Sagrera', aprilMonth:'ABR', juneMonth:'JUN', springFestTitle:'Fiestas de la Primavera', endCourseTitle:'Concierto de Final de Curso' });
+Object.assign(translations.ca, { sagreraHomeName:'Festes de La Sagrera', aprilMonth:'ABR', juneMonth:'JUN', springFestTitle:'Festes de la Primavera', endCourseTitle:'Concert de Final de Curs' });
+Object.assign(translations.en, { sagreraHomeName:'La Sagrera Neighbourhood Festival', aprilMonth:'APR', juneMonth:'JUN', springFestTitle:'Spring Festival', endCourseTitle:'End-of-Year Concert' });
+Object.assign(translations.it, { sagreraHomeName:'Festa di quartiere de La Sagrera', aprilMonth:'APR', juneMonth:'GIU', springFestTitle:'Festa di primavera', endCourseTitle:'Concerto di Fine Corso' });
+Object.assign(translations.fr, { sagreraHomeName:'Fête de quartier de La Sagrera', aprilMonth:'AVR', juneMonth:'JUIN', springFestTitle:'Fête du printemps', endCourseTitle:'Concert de Fin d’Année' });
 
 Object.assign(translations.es, { classicLabel:'CLÁSICO', popStyle:'Pop enérgico, ritmo y un estribillo para cantar juntos', anthemStyle:'Guitarras, teclados y toda la fuerza de un gran himno', rockStyle:'Una canción atemporal, directa y reconocible desde el primer acorde' });
 Object.assign(translations.ca, { classicLabel:'CLÀSSIC', popStyle:'Pop enèrgic, ritme i una tornada per cantar plegats', anthemStyle:'Guitarres, teclats i tota la força d’un gran himne', rockStyle:'Una cançó atemporal, directa i reconeixible des del primer acord' });
@@ -166,11 +291,11 @@ Object.assign(translations.en, { videoLabel:'The Navies on screen', videoTitle:'
 Object.assign(translations.it, { videoLabel:'The Navies sullo schermo', videoTitle:'Il live,<br><em>anche qui.</em>', videoIntro:'Uno spazio per rivivere concerti, prove e momenti della band. Per ora troverai esempi da sostituire con i vostri video.', featuredVideo:'Video in evidenza · Prossimamente', featuredCopy:'Qui apparirà il video principale dell’ultimo concerto.', watchVideo:'Guarda il video', liveVideos:'Dal vivo', nextRecording:'Prossima registrazione', behindScenes:'Prove & backstage', rehearsalRoom:'Dalla sala prove', howItSounds:'Il suono dei The Navies', betweenSongs:'Tra le canzoni', videoPlaceholder:'Video provvisorio. Sostituisci questa scheda con un link YouTube o un file video.', privateArea:'Area privata della band', spaceIntro:'Spartiti, materiali e conversazione interna in un unico luogo.', demoVersion:'Versione dimostrativa', memberAccess:'Accesso membri', loginCopy:'Inserisci le credenziali per accedere allo spazio interno.', enterSpace:'Entra', memberArea:'Spazio membri', hello:'Ciao', signOut:'Esci', scores:'Spartiti', scoresCopy:'Documenti provvisori pronti per collegare i PDF definitivi.', chatCopy:'Demo locale: questi messaggi appaiono solo su questo dispositivo.' });
 Object.assign(translations.fr, { videoLabel:'The Navies à l’écran', videoTitle:'Le live,<br><em>aussi ici.</em>', videoIntro:'Un espace pour revivre concerts, répétitions et moments du groupe. Pour l’instant, vous trouverez des exemples à remplacer par vos vidéos.', featuredVideo:'Vidéo à la une · Prochainement', featuredCopy:'La vidéo principale du dernier concert apparaîtra ici.', watchVideo:'Voir la vidéo', liveVideos:'En concert', nextRecording:'Prochain enregistrement', behindScenes:'Répétitions & coulisses', rehearsalRoom:'Depuis la salle de répétition', howItSounds:'Le son de The Navies', betweenSongs:'Entre les chansons', videoPlaceholder:'Vidéo provisoire. Remplacez cette carte par un lien YouTube ou un fichier vidéo.', privateArea:'Espace privé du groupe', spaceIntro:'Partitions, ressources et conversation interne au même endroit.', demoVersion:'Version de démonstration', memberAccess:'Accès membres', loginCopy:'Saisissez vos identifiants pour accéder à l’espace interne.', enterSpace:'Entrer', memberArea:'Espace membres', hello:'Bonjour', signOut:'Se déconnecter', scores:'Partitions', scoresCopy:'Documents provisoires prêts à accueillir les PDF définitifs.', chatCopy:'Démo locale : ces messages apparaissent uniquement sur cet appareil.' });
 
-Object.assign(translations.es, { spaceIntro:'Partituras, repertorios y fechas importantes organizados en un mismo lugar.', concertScoresCopy:'Partituras y materiales organizados según el repertorio del concierto.', importantDates:'Fechas importantes', calendarCopy:'Ensayos y actuaciones previstas para preparar Festes de La Sagrera.', rehearsal:'Ensayo', rehearsalTime:'17:30–18:45', dressRehearsal:'Ensayo general', generalScore:'General', lyrics:'Letra', chords:'Acordes', keyboard:'Teclado' });
-Object.assign(translations.ca, { spaceIntro:'Partitures, repertoris i dates importants organitzats en un mateix lloc.', concertScoresCopy:'Partitures i materials organitzats segons el repertori del concert.', importantDates:'Dates importants', calendarCopy:'Assajos i actuacions previstes per preparar Festes de La Sagrera.', rehearsal:'Assaig', rehearsalTime:'17:30–18:45', dressRehearsal:'Assaig general', generalScore:'General', lyrics:'Lletra', chords:'Acords', keyboard:'Teclat' });
-Object.assign(translations.en, { spaceIntro:'Scores, setlists and important dates organised in one place.', concertScoresCopy:'Scores and materials organised around the concert setlist.', importantDates:'Important dates', calendarCopy:'Rehearsals and performances scheduled for Festes de La Sagrera.', rehearsal:'Rehearsal', rehearsalTime:'17:30–18:45', dressRehearsal:'Dress rehearsal', generalScore:'Full score', lyrics:'Lyrics', chords:'Chords', keyboard:'Keys' });
-Object.assign(translations.it, { spaceIntro:'Spartiti, repertori e date importanti organizzati in un unico luogo.', concertScoresCopy:'Spartiti e materiali organizzati secondo il repertorio del concerto.', importantDates:'Date importanti', calendarCopy:'Prove ed esibizioni previste per preparare Festes de La Sagrera.', rehearsal:'Prova', rehearsalTime:'17:30–18:45', dressRehearsal:'Prova generale', generalScore:'Partitura generale', lyrics:'Testo', chords:'Accordi', keyboard:'Tastiere' });
-Object.assign(translations.fr, { spaceIntro:'Partitions, répertoires et dates importantes réunis au même endroit.', concertScoresCopy:'Partitions et ressources organisées selon le programme du concert.', importantDates:'Dates importantes', calendarCopy:'Répétitions et concerts prévus pour préparer Festes de La Sagrera.', rehearsal:'Répétition', rehearsalTime:'17 h 30–18 h 45', dressRehearsal:'Répétition générale', generalScore:'Partition générale', lyrics:'Paroles', chords:'Accords', keyboard:'Clavier' });
+Object.assign(translations.es, { spaceIntro:'Partituras, repertorios y fechas importantes organizados en un mismo lugar.', concertScoresCopy:'Partituras y materiales organizados según el repertorio del concierto.', importantDates:'Fechas importantes', calendarCopy:'Ensayos y actuaciones previstas para preparar Festes de La Sagrera.', rehearsal:'Ensayo', rehearsalTime:'17:30h', dressRehearsal:'Ensayo General', today:'Hoy', generalScore:'General', lyrics:'Letra', chords:'Acordes', keyboard:'Teclado' });
+Object.assign(translations.ca, { spaceIntro:'Partitures, repertoris i dates importants organitzats en un mateix lloc.', concertScoresCopy:'Partitures i materials organitzats segons el repertori del concert.', importantDates:'Dates importants', calendarCopy:'Assajos i actuacions previstes per preparar Festes de La Sagrera.', rehearsal:'Assaig', rehearsalTime:'17:30h', dressRehearsal:'Assaig General', today:'Avui', generalScore:'General', lyrics:'Lletra', chords:'Acords', keyboard:'Teclat' });
+Object.assign(translations.en, { spaceIntro:'Scores, setlists and important dates organised in one place.', concertScoresCopy:'Scores and materials organised around the concert setlist.', importantDates:'Important dates', calendarCopy:'Rehearsals and performances scheduled for Festes de La Sagrera.', rehearsal:'Rehearsal', rehearsalTime:'17:30h', dressRehearsal:'Dress Rehearsal', today:'Today', generalScore:'Full score', lyrics:'Lyrics', chords:'Chords', keyboard:'Keys' });
+Object.assign(translations.it, { spaceIntro:'Spartiti, repertori e date importanti organizzati in un unico luogo.', concertScoresCopy:'Spartiti e materiali organizzati secondo il repertorio del concerto.', importantDates:'Date importanti', calendarCopy:'Prove ed esibizioni previste per preparare Festes de La Sagrera.', rehearsal:'Prova', rehearsalTime:'17:30h', dressRehearsal:'Prova Generale', today:'Oggi', generalScore:'Partitura generale', lyrics:'Testo', chords:'Accordi', keyboard:'Tastiere' });
+Object.assign(translations.fr, { spaceIntro:'Partitions, répertoires et dates importantes réunis au même endroit.', concertScoresCopy:'Partitions et ressources organisées selon le programme du concert.', importantDates:'Dates importantes', calendarCopy:'Répétitions et concerts prévus pour préparer Festes de La Sagrera.', rehearsal:'Répétition', rehearsalTime:'17:30h', dressRehearsal:'Répétition Générale', today:'Aujourd’hui', generalScore:'Partition générale', lyrics:'Paroles', chords:'Accords', keyboard:'Clavier' });
 
 Object.assign(translations.es, { sagreraFestName:'Fiestas de La Sagrera 2026', calendarCopy:'Ensayos y actuaciones previstas para preparar las Fiestas de La Sagrera.' });
 Object.assign(translations.ca, { sagreraFestName:'Festes de La Sagrera 2026', calendarCopy:'Assajos i actuacions previstes per preparar les Festes de La Sagrera.' });
@@ -213,11 +338,11 @@ const languagePicker = document.querySelector('#language-picker');
 const languageTrigger = languagePicker.querySelector('.language-trigger');
 const languageMenu = languagePicker.querySelector('.language-menu');
 const languageOptions = [...languageMenu.querySelectorAll('[data-language]')];
-Object.assign(translations.es, { seasonTitle:'Tema estacional', spring:'Primavera', summer:'Verano', autumn:'Otoño', winter:'Invierno' });
-Object.assign(translations.ca, { seasonTitle:'Tema estacional', spring:'Primavera', summer:'Estiu', autumn:'Tardor', winter:'Hivern' });
-Object.assign(translations.en, { seasonTitle:'Seasonal theme', spring:'Spring', summer:'Summer', autumn:'Autumn', winter:'Winter' });
-Object.assign(translations.it, { seasonTitle:'Tema stagionale', spring:'Primavera', summer:'Estate', autumn:'Autunno', winter:'Inverno' });
-Object.assign(translations.fr, { seasonTitle:'Thème saisonnier', spring:'Printemps', summer:'Été', autumn:'Automne', winter:'Hiver' });
+Object.assign(translations.es, { spring:'Primavera', summer:'Verano', autumn:'Otoño', winter:'Invierno' });
+Object.assign(translations.ca, { spring:'Primavera', summer:'Estiu', autumn:'Tardor', winter:'Hivern' });
+Object.assign(translations.en, { spring:'Spring', summer:'Summer', autumn:'Autumn', winter:'Winter' });
+Object.assign(translations.it, { spring:'Primavera', summer:'Estate', autumn:'Autunno', winter:'Inverno' });
+Object.assign(translations.fr, { spring:'Printemps', summer:'Été', autumn:'Automne', winter:'Hiver' });
 Object.assign(translations.es, { visualVocals:'Voces', visualBass:'Bajo', visualGuitar:'Guitarra', visualKeys:'Teclados', visualDrums:'Batería', sessionActive:'Sesión iniciada', sessionClosed:'Sesión cerrada' });
 Object.assign(translations.ca, { visualVocals:'Veus', visualBass:'Baix', visualGuitar:'Guitarra', visualKeys:'Teclats', visualDrums:'Bateria', sessionActive:'Sessió iniciada', sessionClosed:'Sessió tancada' });
 Object.assign(translations.en, { visualVocals:'Vocals', visualBass:'Bass', visualGuitar:'Guitar', visualKeys:'Keyboards', visualDrums:'Drums', sessionActive:'Signed in', sessionClosed:'Signed out' });
@@ -255,7 +380,6 @@ if (!siteFooter) {
 const seasonControl = document.createElement('div');
 seasonControl.className = 'season-control';
 seasonControl.innerHTML = `
-  <p class="season-control-label" data-i18n="seasonTitle">Tema estacional</p>
   <div class="season-options" role="group" aria-label="Tema estacional">
     ${Object.entries(seasonThemes).map(([season, theme]) => `<button class="season-option" type="button" data-season="${season}" aria-pressed="false"><span class="season-icon" aria-hidden="true">${theme.icon}</span><span data-i18n="${season}">${season}</span></button>`).join('')}
   </div>`;
@@ -273,16 +397,54 @@ function setSeason(season, persist = true) {
 setSeason(window.__naviesInitialSeason || localStorage.getItem('the-navies-season') || 'autumn', false);
 requestAnimationFrame(() => document.documentElement.classList.add('theme-ready'));
 seasonControl.querySelectorAll('.season-option').forEach((button) => button.addEventListener('click', () => setSeason(button.dataset.season)));
-Object.assign(translations.es, { navVideos:'Navies Live', time:'13:00 h', tvSoonTitle:'Estamos afinando<br><em>la pantalla.</em>', tvSoonCopy:'Próximamente publicaremos aquí los primeros vídeos de The Navies.' });
-Object.assign(translations.ca, { navVideos:'Navies Live', time:'13:00 h', tvSoonTitle:'Estem afinant<br><em>la pantalla.</em>', tvSoonCopy:'Aviat publicarem aquí els primers vídeos de The Navies.' });
-Object.assign(translations.en, { navVideos:'Navies Live', time:'1:00 pm', tvSoonTitle:'We’re tuning<br><em>the screen.</em>', tvSoonCopy:'The first videos from The Navies will be here soon.' });
-Object.assign(translations.it, { navVideos:'Navies Live', time:'13:00', tvSoonTitle:'Stiamo accordando<br><em>lo schermo.</em>', tvSoonCopy:'Presto pubblicheremo qui i primi video dei The Navies.' });
-Object.assign(translations.fr, { navVideos:'Navies Live', time:'13 h', tvSoonTitle:'Nous accordons<br><em>l’écran.</em>', tvSoonCopy:'Les premières vidéos de The Navies seront bientôt disponibles ici.' });
+Object.assign(translations.es, { navVideos:'Navies Live', time:'13:00h', tvSoonTitle:'Estamos afinando<br><em>la pantalla.</em>', tvSoonCopy:'Próximamente publicaremos aquí los primeros vídeos de The Navies.' });
+Object.assign(translations.ca, { navVideos:'Navies Live', time:'13:00h', tvSoonTitle:'Estem afinant<br><em>la pantalla.</em>', tvSoonCopy:'Aviat publicarem aquí els primers vídeos de The Navies.' });
+Object.assign(translations.en, { navVideos:'Navies Live', time:'13:00h', tvSoonTitle:'We’re tuning<br><em>the screen.</em>', tvSoonCopy:'The first videos from The Navies will be here soon.' });
+Object.assign(translations.it, { navVideos:'Navies Live', time:'13:00h', tvSoonTitle:'Stiamo accordando<br><em>lo schermo.</em>', tvSoonCopy:'Presto pubblicheremo qui i primi video dei The Navies.' });
+Object.assign(translations.fr, { navVideos:'Navies Live', time:'13:00h', tvSoonTitle:'Nous accordons<br><em>l’écran.</em>', tvSoonCopy:'Les premières vidéos de The Navies seront bientôt disponibles ici.' });
 
+const contactEmails = {
+  ca: 'contacte@thenavies.com',
+  es: 'contacto@thenavies.com',
+  en: 'contact@thenavies.com',
+  fr: 'contact@thenavies.com',
+  it: 'contatto@thenavies.com'
+};
 let currentLanguage = 'es';
 function closeLanguageMenu() {
   languageTrigger.setAttribute('aria-expanded', 'false');
   languageMenu.hidden = true;
+}
+const calendarLocales = { ca:'ca-ES', es:'es-ES', en:'en-GB', fr:'fr-FR', it:'it-IT' };
+function syncCalendar(language) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const copy = translations[language] || translations.es;
+  const locale = calendarLocales[language] || calendarLocales.es;
+
+  document.querySelectorAll('.event-item time[datetime]').forEach((time) => {
+    const item = time.closest('.event-item');
+    const [year, month, day] = time.dateTime.split('-').map(Number);
+    const eventDate = new Date(year, month - 1, day);
+    eventDate.setHours(0, 0, 0, 0);
+    item.hidden = eventDate < today;
+    item.classList.remove('is-today');
+
+    if (eventDate.getTime() === today.getTime() && !item.classList.contains('concert')) {
+      item.classList.add('is-today');
+      const formattedDate = new Intl.DateTimeFormat(locale, { day:'numeric', month:'short' })
+        .format(eventDate)
+        .replace(/\.$/, '');
+      time.innerHTML = `<strong>${copy.today}</strong><small>${formattedDate}</small>`;
+      return;
+    }
+
+    const monthLabel = new Intl.DateTimeFormat(locale, { month:'short' })
+      .format(eventDate)
+      .replace(/\.$/, '')
+      .toUpperCase();
+    time.innerHTML = `<strong>${String(day).padStart(2, '0')}</strong><span>${monthLabel}</span>`;
+  });
 }
 function setLanguage(language, persist = false) {
   const copy = translations[language] || translations.es;
@@ -294,10 +456,17 @@ function setLanguage(language, persist = false) {
   languageTrigger.querySelector('.flag').className = `flag flag-${language}`;
   languageTrigger.querySelector('strong').textContent = activeOption.querySelector('small').textContent;
   languageOptions.forEach((option) => option.setAttribute('aria-selected', String(option === activeOption)));
+  const contactEmail = contactEmails[language] || contactEmails.es;
+  const emailLink = document.querySelector('.email-link');
+  if (emailLink) {
+    emailLink.href = `mailto:${contactEmail}`;
+    emailLink.innerHTML = `${contactEmail} <span>↗</span>`;
+  }
   if (persist) {
     localStorage.setItem('the-navies-language', language);
     localStorage.setItem('the-navies-language-manual', '1');
   }
+  syncCalendar(language);
   if (document.querySelector('#account-dialog')) updateAccountUI();
 }
 const savedLanguage = localStorage.getItem('the-navies-language');
@@ -357,7 +526,8 @@ if (contactForm) contactForm.addEventListener('submit', (event) => {
     ''
   ].filter((line, index, lines) => line || (index > 0 && lines[index - 1])).join('\n');
   const subject = `Contacto desde la web — ${data.get('name')}`;
-  window.location.href = `mailto:contacto@thenavies.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(details)}`;
+  const recipient = contactEmails[currentLanguage] || contactEmails.es;
+  window.location.href = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(details)}`;
 });
 
 const observer = new IntersectionObserver((entries) => {
@@ -412,6 +582,7 @@ authToast.setAttribute('role', 'status');
 authToast.setAttribute('aria-live', 'polite');
 document.body.append(authToast);
 let authToastTimer;
+let accountCloseTimer;
 
 function showAuthToast(message) {
   clearTimeout(authToastTimer);
@@ -444,13 +615,29 @@ function updateAccountUI() {
   accountDialog.querySelector('.account-member-icon').textContent = member ? member.charAt(0).toUpperCase() : '';
 }
 
+function openAccountDialog() {
+  clearTimeout(accountCloseTimer);
+  accountDialog.classList.remove('is-visible');
+  if (!accountDialog.open) accountDialog.showModal();
+  requestAnimationFrame(() => requestAnimationFrame(() => accountDialog.classList.add('is-visible')));
+}
+
+function closeAccountDialog() {
+  if (!accountDialog.open) return;
+  clearTimeout(accountCloseTimer);
+  accountDialog.classList.remove('is-visible');
+  accountCloseTimer = setTimeout(() => accountDialog.close(), 300);
+}
+
 window.naviesLogin = (username, password) => {
   const member = String(username).trim().toLowerCase();
   if (!navyMembers.includes(member) || password !== 'navies2026') return false;
   localStorage.setItem('navies-member-session', member);
-  updateAccountUI();
+  const dialogWasOpen = accountDialog.open;
+  closeAccountDialog();
+  if (dialogWasOpen) setTimeout(updateAccountUI, 300);
+  else updateAccountUI();
   window.dispatchEvent(new CustomEvent('navies-auth-change', { detail: { member } }));
-  if (accountDialog.open) accountDialog.close();
   const copy = translations[currentLanguage] || translations.es;
   showAuthToast(copy.sessionActive || translations.es.sessionActive);
   if (window.matchMedia('(max-width: 900px)').matches) {
@@ -461,20 +648,23 @@ window.naviesLogin = (username, password) => {
 
 window.naviesLogout = () => {
   localStorage.removeItem('navies-member-session');
-  updateAccountUI();
+  const dialogWasOpen = accountDialog.open;
+  closeAccountDialog();
+  if (dialogWasOpen) setTimeout(updateAccountUI, 300);
+  else updateAccountUI();
   window.dispatchEvent(new CustomEvent('navies-auth-change', { detail: { member: null } }));
-  if (accountDialog.open) accountDialog.close();
   const copy = translations[currentLanguage] || translations.es;
   showAuthToast(copy.sessionClosed || translations.es.sessionClosed);
 };
 
 document.querySelectorAll('.account-trigger').forEach((trigger) => trigger.addEventListener('click', () => {
   updateAccountUI();
-  accountDialog.showModal();
+  openAccountDialog();
   if (!validNavyMember()) requestAnimationFrame(() => accountDialog.querySelector('input').focus());
 }));
-accountDialog.querySelector('.account-close').addEventListener('click', () => accountDialog.close());
-accountDialog.addEventListener('click', (event) => { if (event.target === accountDialog) accountDialog.close(); });
+accountDialog.querySelector('.account-close').addEventListener('click', closeAccountDialog);
+accountDialog.addEventListener('click', (event) => { if (event.target === accountDialog) closeAccountDialog(); });
+accountDialog.addEventListener('cancel', (event) => { event.preventDefault(); closeAccountDialog(); });
 accountDialog.querySelector('.account-login-form').addEventListener('submit', (event) => {
   event.preventDefault();
   const data = new FormData(event.currentTarget);
