@@ -229,6 +229,17 @@ Object.assign(translations.en, { groupVocals:'Three singers', groupVocalsCopy:'T
 Object.assign(translations.it, { groupVocals:'Tre cantanti', groupVocalsCopy:'Tre voci per melodie, armonie e cori.', groupBass:'Una bassista', groupBassCopy:'La base grave che unisce ritmo e armonia.', groupGuitar:'Un chitarrista', groupGuitarCopy:'Riff, accordi e il carattere rock della band.', groupKeys:'Un tastierista', groupKeysCopy:'Pianoforti, sintetizzatori e strati sonori.', groupDrums:'Un batterista', groupDrumsCopy:'Il ritmo che sostiene e spinge tutto il live.', provisionalBio:'Così si completa il suono dei The Navies.' });
 Object.assign(translations.fr, { groupVocals:'Trois chanteuses', groupVocalsCopy:'Trois voix pour les mélodies, harmonies et chœurs.', groupBass:'Une bassiste', groupBassCopy:'La base grave qui relie rythme et harmonie.', groupGuitar:'Un guitariste', groupGuitarCopy:'Des riffs, des accords et le caractère rock du groupe.', groupKeys:'Un claviériste', groupKeysCopy:'Pianos, synthétiseurs et textures sonores.', groupDrums:'Un batteur', groupDrumsCopy:'Le rythme qui porte tout le concert.', provisionalBio:'Ainsi se construit le son de The Navies.' });
 
+Object.assign(translations.es, { rightsReserved:'Todos los derechos reservados', collaboration:'Con la colaboración de' });
+Object.assign(translations.ca, { rightsReserved:'Tots els drets reservats', collaboration:'Amb la col·laboració de' });
+Object.assign(translations.en, { rightsReserved:'All rights reserved', collaboration:'In collaboration with' });
+Object.assign(translations.it, { rightsReserved:'Tutti i diritti riservati', collaboration:'In collaborazione con' });
+Object.assign(translations.fr, { rightsReserved:'Tous droits réservés', collaboration:'En collaboration avec' });
+Object.assign(translations.es, { bcnIntro:'En este camino contamos con la colaboración de <strong class="bcn-highlight">BCN Fusió</strong>, que nos acompaña y nos ayuda a seguir creciendo como banda.' });
+Object.assign(translations.ca, { bcnIntro:'En aquest camí comptem amb la col·laboració de <strong class="bcn-highlight">BCN Fusió</strong>, que ens acompanya i ens ajuda a continuar creixent com a banda.' });
+Object.assign(translations.en, { bcnIntro:'Along the way, we have the support of <strong class="bcn-highlight">BCN Fusió</strong>, who are helping us continue to grow as a band.' });
+Object.assign(translations.it, { bcnIntro:'In questo percorso contiamo sulla collaborazione di <strong class="bcn-highlight">BCN Fusió</strong>, che ci accompagna e ci aiuta a continuare a crescere come band.' });
+Object.assign(translations.fr, { bcnIntro:'Dans cette aventure, nous bénéficions de la collaboration de <strong class="bcn-highlight">BCN Fusió</strong>, qui nous accompagne et nous aide à continuer de grandir en tant que groupe.' });
+
 const seasonThemes = {
   spring: { color:'#F4A7C1', icon:'🌸' },
   summer: { color:'#FFD76A', icon:'☀️' },
@@ -238,7 +249,7 @@ const seasonThemes = {
 let siteFooter = document.querySelector('footer');
 if (!siteFooter) {
   siteFooter = document.createElement('footer');
-  siteFooter.innerHTML = '<a class="brand" href="#inicio" data-route="home">THE NAVIES<span>.</span></a><p data-i18n="genreLine">Rock · Pop · Clásicos</p><p>© <span class="footer-year"></span> The Navies</p>';
+  siteFooter.innerHTML = '<a class="brand" href="#inicio" data-route="home">THE NAVIES<span>.</span></a><p class="footer-copyright">© <span class="footer-year"></span> The Navies<span data-i18n="rightsReserved">Todos los derechos reservados</span></p><p class="footer-credit"><span data-i18n="collaboration">Con la colaboración de</span> <a href="https://bcnfusio.cat" target="_blank" rel="noopener">BCN Fusió ↗</a></p>';
   document.body.append(siteFooter);
 }
 const seasonControl = document.createElement('div');
@@ -314,11 +325,13 @@ document.addEventListener('keydown', (event) => { if (event.key === 'Escape') cl
 const memberDialog = document.querySelector('#member-dialog');
 const dialogName = document.querySelector('#dialog-name');
 const dialogBio = document.querySelector('#dialog-bio');
+const dialogSocial = document.querySelector('#dialog-social');
 const memberTitleKeys = { vocals:'visualVocals', bass:'visualBass', guitar:'visualGuitar', keys:'visualKeys', drums:'visualDrums' };
 function openMember(member) {
   const profile = (memberBios[currentLanguage] || memberBios.es)[member];
   dialogName.textContent = (translations[currentLanguage] || translations.es)[memberTitleKeys[member]];
   dialogBio.textContent = profile[1];
+  dialogSocial.hidden = member !== 'drums';
   memberDialog.showModal();
 }
 document.querySelectorAll('[data-member]').forEach((card) => {

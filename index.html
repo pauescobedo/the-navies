@@ -8,7 +8,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <meta name="navies-build" content="20261019-16">
+  <meta name="navies-build" content="20261022-21">
   <title>The Navies</title>
   <link rel="icon" href="favicon.svg?v=20261019-13" type="image/svg+xml" sizes="any">
   <link rel="manifest" href="manifest.webmanifest?v=20261019-13">
@@ -21,7 +21,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=20261019-13">
+  <link rel="stylesheet" href="styles.css?v=20261022-21">
   <link rel="stylesheet" href="subpages.css?v=20261019-13">
 </head>
 <body>
@@ -35,11 +35,11 @@
         <span class="language-chevron" aria-hidden="true"></span>
       </button>
       <div class="language-menu" id="language-menu" role="listbox" aria-label="Seleccionar idioma" hidden>
-        <button type="button" role="option" data-language="es" aria-selected="true"><span class="flag flag-es" aria-hidden="true"></span><span>Español</span><small>ES</small></button>
         <button type="button" role="option" data-language="ca" aria-selected="false"><span class="flag flag-ca" aria-hidden="true"></span><span>Català</span><small>CA</small></button>
+        <button type="button" role="option" data-language="es" aria-selected="true"><span class="flag flag-es" aria-hidden="true"></span><span>Español</span><small>ES</small></button>
         <button type="button" role="option" data-language="en" aria-selected="false"><span class="flag flag-en" aria-hidden="true"></span><span>English</span><small>EN</small></button>
-        <button type="button" role="option" data-language="it" aria-selected="false"><span class="flag flag-it" aria-hidden="true"></span><span>Italiano</span><small>IT</small></button>
         <button type="button" role="option" data-language="fr" aria-selected="false"><span class="flag flag-fr" aria-hidden="true"></span><span>Français</span><small>FR</small></button>
+        <button type="button" role="option" data-language="it" aria-selected="false"><span class="flag flag-it" aria-hidden="true"></span><span>Italiano</span><small>IT</small></button>
       </div>
       </div>
       
@@ -127,6 +127,7 @@
         <h2 data-i18n-html="bandTitle">Siete músicos.<br>Una sola corriente.</h2>
         <!-- EDITAR: Texto biográfico provisional -->
         <p data-i18n="bandBody">Somos siete jóvenes apasionados por la música, unidos por las ganas de tocar, aprender y disfrutar juntos sobre el escenario. Cada voz y cada instrumento forman parte de The Navies con el mismo peso.</p>
+        <p class="band-collaboration" data-i18n-html="bcnIntro">En este camino contamos con la colaboración de <strong class="bcn-highlight">BCN Fusió</strong>, que nos acompaña y nos ayuda a seguir creciendo como banda.</p>
       </div>
       <div class="members">
         <article class="member reveal" role="button" tabindex="0" data-member="vocals"><div class="avatar"><span class="instrument-word" data-i18n="visualVocals">VOCES</span></div><div><h3 data-i18n="groupVocals">Tres cantantes</h3><p data-i18n="groupVocalsCopy">Tres voces para melodías, armonías y coros.</p></div></article>
@@ -239,16 +240,17 @@
     <p class="eyebrow"><span></span> <span data-i18n="memberLabel">The band</span></p>
     <h2 id="dialog-name"></h2>
     <p class="dialog-bio" id="dialog-bio"></p>
+    <a class="dialog-social" id="dialog-social" href="https://instagram.com/_pauescobedo" target="_blank" rel="noopener" hidden>Instagram ↗</a>
     <small data-i18n="provisionalBio">Biografía provisional.</small>
   </dialog>
 
   <footer>
     <a class="brand" href="#inicio" data-route="home">THE NAVIES<span>.</span></a>
-    <p data-i18n="genreLine">Rock · Pop · Clásicos</p>
-    <p>© <span id="year"></span> The Navies</p>
+    <p class="footer-copyright">© <span id="year"></span> The Navies<span data-i18n="rightsReserved">Todos los derechos reservados</span></p>
+    <p class="footer-credit"><span data-i18n="collaboration">Con la colaboración de</span> <a href="https://bcnfusio.cat" target="_blank" rel="noopener">BCN Fusió ↗</a></p>
   </footer>
 
-  <script src="script.js?v=20261019-13"></script>
+  <script src="script.js?v=20261021-20"></script>
   <script src="portal.js?v=20261019-16"></script>
 </body>
 </html>
