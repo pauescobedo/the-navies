@@ -79,7 +79,13 @@ function showPage(route, updateHistory = true) {
       element.classList.remove('visible');
     });
     void selectedView.offsetHeight;
-    revealElements.forEach((element) => revealObserver.observe(element));
+    requestAnimationFrame(() => {
+      revealElements.forEach((element) => {
+        const bounds = element.getBoundingClientRect();
+        if (bounds.top < window.innerHeight * .94 && bounds.bottom > 0) element.classList.add('visible');
+        else revealObserver.observe(element);
+      });
+    });
   });
 }
 
@@ -170,6 +176,81 @@ if (smoothWheelEnabled) {
       smoothWheelTarget = window.scrollY;
       smoothWheelPosition = window.scrollY;
     }
+  }, { passive:true });
+}
+
+const smoothTouchEnabled = window.matchMedia('(pointer:coarse)').matches && !window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+let touchScrollLastY = 0;
+let touchScrollLastX = 0;
+let touchScrollLastTime = 0;
+let touchScrollVelocity = 0;
+let touchScrollAxis = null;
+let touchScrollFrame = null;
+
+function stopTouchScroll() {
+  if (touchScrollFrame !== null) cancelAnimationFrame(touchScrollFrame);
+  touchScrollFrame = null;
+  touchScrollVelocity = 0;
+}
+
+function animateTouchScroll() {
+  const scroller = document.scrollingElement;
+  const maxScroll = Math.max(0, scroller.scrollHeight - window.innerHeight);
+  const distanceToEdge = touchScrollVelocity > 0 ? maxScroll - scroller.scrollTop : scroller.scrollTop;
+  const edgeBrake = distanceToEdge < 180 ? .72 + .28 * Math.max(0, distanceToEdge) / 180 : 1;
+  touchScrollVelocity *= .94 * edgeBrake;
+  const nextPosition = Math.max(0, Math.min(maxScroll, scroller.scrollTop + touchScrollVelocity * 16));
+  scroller.scrollTop = nextPosition;
+  if (Math.abs(touchScrollVelocity) > .03 && nextPosition > 0 && nextPosition < maxScroll) touchScrollFrame = requestAnimationFrame(animateTouchScroll);
+  else stopTouchScroll();
+}
+
+if (smoothTouchEnabled) {
+  document.documentElement.classList.add('smooth-touch');
+  window.addEventListener('touchstart', (event) => {
+    if (event.touches.length !== 1 || document.querySelector('dialog[open]') || document.body.classList.contains('menu-open')) return;
+    stopTouchScroll();
+    touchScrollLastY = event.touches[0].clientY;
+    touchScrollLastX = event.touches[0].clientX;
+    touchScrollLastTime = performance.now();
+    touchScrollVelocity = 0;
+    touchScrollAxis = null;
+  }, { passive:true });
+  window.addEventListener('touchmove', (event) => {
+    if (event.touches.length !== 1 || document.querySelector('dialog[open]') || document.body.classList.contains('menu-open')) return;
+    const currentY = event.touches[0].clientY;
+    const currentX = event.touches[0].clientX;
+    const verticalDelta = touchScrollLastY - currentY;
+    const horizontalDelta = touchScrollLastX - currentX;
+    if (!touchScrollAxis) {
+      if (Math.max(Math.abs(verticalDelta), Math.abs(horizontalDelta)) < 3) return;
+      touchScrollAxis = Math.abs(verticalDelta) >= Math.abs(horizontalDelta) ? 'vertical' : 'horizontal';
+    }
+    event.preventDefault();
+    if (touchScrollAxis === 'horizontal') return;
+    const now = performance.now();
+    const elapsed = Math.max(8, now - touchScrollLastTime);
+    const scroller = document.scrollingElement;
+    const maxScroll = Math.max(0, scroller.scrollHeight - window.innerHeight);
+    const distanceToEdge = verticalDelta > 0 ? maxScroll - scroller.scrollTop : scroller.scrollTop;
+    const edgeResistance = distanceToEdge < 110 ? .68 + .32 * Math.max(0, distanceToEdge) / 110 : 1;
+    const adjustedDelta = verticalDelta * edgeResistance;
+    scroller.scrollTop = Math.max(0, Math.min(maxScroll, scroller.scrollTop + adjustedDelta));
+    const instantVelocity = adjustedDelta / elapsed;
+    touchScrollVelocity = Math.max(-2.4, Math.min(2.4, touchScrollVelocity * .62 + instantVelocity * .38));
+    touchScrollLastY = currentY;
+    touchScrollLastX = currentX;
+    touchScrollLastTime = now;
+  }, { passive:false });
+  window.addEventListener('touchend', () => {
+    if (touchScrollAxis === 'vertical' && performance.now() - touchScrollLastTime < 80 && Math.abs(touchScrollVelocity) > .035) {
+      touchScrollFrame = requestAnimationFrame(animateTouchScroll);
+    }
+    touchScrollAxis = null;
+  }, { passive:true });
+  window.addEventListener('touchcancel', () => {
+    touchScrollAxis = null;
+    stopTouchScroll();
   }, { passive:true });
 }
 
