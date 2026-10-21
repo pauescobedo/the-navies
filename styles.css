@@ -132,8 +132,8 @@ main > section { scroll-margin-top:92px; }
 .date-block strong { font: 500 clamp(62px, 7vw, 100px)/.8 "Manrope", sans-serif; letter-spacing: -.08em; }
 .date-block span { color: #b9cedb; font-size: 11px; line-height: 1.55; letter-spacing: .15em; }
 .show-info { border-left: 1px solid rgba(255,255,255,.2); padding-left: clamp(24px, 4vw, 60px); }
-.status { color: var(--lime); text-transform: uppercase; font-size: 11px; letter-spacing: .12em; }
-.status i { display: inline-block; width: 5px; height: 5px; margin-right: 6px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent); }
+.status { display:inline-flex; align-items:center; gap:8px; color:var(--lime); text-transform:uppercase; font-size:11px; line-height:1; letter-spacing:.12em; }
+.status i { width:5px; height:5px; flex:0 0 5px; border-radius:50%; background:var(--lime); box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent); }
 .show-info h3 { margin: 9px 0 5px; font: 500 clamp(30px, 3vw, 48px)/1 "Manrope", sans-serif; letter-spacing: -.05em; }
 .show-info p { color: #b9cedb; margin: 0; font-size: 14px; }
 .show-list { margin-top:25px; }
