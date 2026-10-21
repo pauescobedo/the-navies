@@ -44,6 +44,7 @@ menuButton.addEventListener('click', () => {
 });
 
 const pageViews = [...document.querySelectorAll('[data-page-view]')];
+let revealObserver = null;
 const routeDetails = {
   home: { hash:'#inicio', title:'The Navies' },
   'navies-live': { hash:'#navies-live', title:'Navies Live' },
@@ -58,6 +59,7 @@ function routeFromHash() {
 
 function showPage(route, updateHistory = true) {
   const selectedRoute = routeDetails[route] ? route : 'home';
+  const selectedView = pageViews.find((view) => view.dataset.pageView === selectedRoute);
   document.documentElement.dataset.route = selectedRoute;
   pageViews.forEach((view) => { view.hidden = view.dataset.pageView !== selectedRoute; });
   navigation.querySelectorAll('[data-route]').forEach((link) => {
@@ -68,7 +70,17 @@ function showPage(route, updateHistory = true) {
   document.title = routeDetails[selectedRoute].title;
   if (updateHistory) history.pushState({ route:selectedRoute }, '', routeDetails[selectedRoute].hash);
   window.scrollTo({ top:0, left:0, behavior:'instant' });
-  requestAnimationFrame(() => window.dispatchEvent(new Event('scroll')));
+  requestAnimationFrame(() => {
+    window.dispatchEvent(new Event('scroll'));
+    if (!revealObserver || !selectedView) return;
+    const revealElements = selectedView.querySelectorAll('.reveal');
+    revealElements.forEach((element) => {
+      revealObserver.unobserve(element);
+      element.classList.remove('visible');
+    });
+    void selectedView.offsetHeight;
+    revealElements.forEach((element) => revealObserver.observe(element));
+  });
 }
 
 navigation.querySelectorAll('[data-route]').forEach((link) => link.addEventListener('click', (event) => {
@@ -159,70 +171,6 @@ if (smoothWheelEnabled) {
       smoothWheelPosition = window.scrollY;
     }
   }, { passive:true });
-}
-
-const smoothTouchEnabled = window.matchMedia('(pointer:coarse)').matches && !window.matchMedia('(prefers-reduced-motion:reduce)').matches;
-let touchLastY = 0;
-let touchLastX = 0;
-let touchLastTime = 0;
-let touchVelocity = 0;
-let touchIsScrolling = false;
-let touchInertiaFrame = null;
-
-function stopTouchInertia() {
-  if (touchInertiaFrame !== null) cancelAnimationFrame(touchInertiaFrame);
-  touchInertiaFrame = null;
-  touchVelocity = 0;
-}
-
-function runTouchInertia() {
-  const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-  const direction = Math.sign(touchVelocity);
-  const distanceToEdge = direction > 0 ? maxScroll - window.scrollY : window.scrollY;
-  const braking = distanceToEdge < 180 ? Math.max(.52, distanceToEdge / 180) : 1;
-  touchVelocity *= .88 * braking;
-  const nextPosition = Math.max(0, Math.min(maxScroll, window.scrollY + touchVelocity * 16));
-  window.scrollTo({ top:nextPosition, left:0, behavior:'instant' });
-  if (Math.abs(touchVelocity) > .055 && nextPosition > 0 && nextPosition < maxScroll) touchInertiaFrame = requestAnimationFrame(runTouchInertia);
-  else stopTouchInertia();
-}
-
-if (smoothTouchEnabled) {
-  window.addEventListener('touchstart', (event) => {
-    if (event.touches.length !== 1 || document.querySelector('dialog[open]')) return;
-    stopTouchInertia();
-    touchLastY = event.touches[0].clientY;
-    touchLastX = event.touches[0].clientX;
-    touchLastTime = performance.now();
-    touchIsScrolling = false;
-  }, { passive:true });
-  window.addEventListener('touchmove', (event) => {
-    if (event.touches.length !== 1 || document.querySelector('dialog[open]')) return;
-    const currentY = event.touches[0].clientY;
-    const currentX = event.touches[0].clientX;
-    const verticalDelta = touchLastY - currentY;
-    const horizontalDelta = touchLastX - currentX;
-    if (!touchIsScrolling && Math.abs(horizontalDelta) > Math.abs(verticalDelta)) return;
-    touchIsScrolling = true;
-    const now = performance.now();
-    const elapsed = Math.max(8, now - touchLastTime);
-    const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
-    const distanceToEdge = verticalDelta > 0 ? maxScroll - window.scrollY : window.scrollY;
-    const braking = distanceToEdge < 180 ? Math.max(.56, distanceToEdge / 180) : 1;
-    const adjustedDelta = verticalDelta * braking;
-    window.scrollTo({ top:Math.max(0, Math.min(maxScroll, window.scrollY + adjustedDelta)), left:0, behavior:'instant' });
-    touchVelocity = Math.max(-1.35, Math.min(1.35, adjustedDelta / elapsed));
-    touchLastY = currentY;
-    touchLastX = currentX;
-    touchLastTime = now;
-    event.preventDefault();
-  }, { passive:false });
-  window.addEventListener('touchend', () => {
-    if (performance.now() - touchLastTime > 90) touchVelocity = 0;
-    if (touchIsScrolling && Math.abs(touchVelocity) > .055) touchInertiaFrame = requestAnimationFrame(runTouchInertia);
-    touchIsScrolling = false;
-  }, { passive:true });
-  window.addEventListener('touchcancel', stopTouchInertia, { passive:true });
 }
 
 const translations = {
@@ -530,16 +478,16 @@ if (contactForm) contactForm.addEventListener('submit', (event) => {
   window.location.href = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(details)}`;
 });
 
-const observer = new IntersectionObserver((entries) => {
+revealObserver = new IntersectionObserver((entries) => {
   entries.forEach((entry) => {
     if (entry.isIntersecting) {
       entry.target.classList.add('visible');
-      observer.unobserve(entry.target);
+      revealObserver.unobserve(entry.target);
     }
   });
 }, { threshold: 0.12 });
 
-document.querySelectorAll('.reveal').forEach((element) => observer.observe(element));
+document.querySelectorAll('.reveal').forEach((element) => revealObserver.observe(element));
 const year = document.querySelector('#year');
 if (year) year.textContent = new Date().getFullYear();
 document.querySelectorAll('.footer-year').forEach((element) => { element.textContent = new Date().getFullYear(); });
