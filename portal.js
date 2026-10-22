@@ -8,8 +8,9 @@ const memberName = document.querySelector('#member-name');
 localStorage.removeItem('navies-demo-chat');
 localStorage.removeItem('navies-demo-member');
 
-const scoreRoot = 'scores';
-const audioRoot = 'audios';
+const portalAssetPrefix = window.__naviesForcedLanguage ? '../' : '';
+const scoreRoot = `${portalAssetPrefix}scores`;
+const audioRoot = `${portalAssetPrefix}audios`;
 const scoreLibrary = {
   'shake-it-off': [
     ['General', 'general.pdf'], ['Letra', 'letra.pdf'], ['Acordes', 'acordes.pdf'], ['Teclado', 'teclado.pdf'], ['Bajo', 'bajo.pdf']

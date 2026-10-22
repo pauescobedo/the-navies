@@ -111,6 +111,11 @@ document.querySelectorAll('a.brand[data-route]').forEach((brand) => brand.addEve
 }));
 window.addEventListener('popstate', () => showPage(routeFromHash(), false));
 showPage(routeFromHash(), false);
+window.addEventListener('pageshow', () => {
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    window.scrollTo({ top:0, left:0, behavior:'instant' });
+  }));
+});
 window.addEventListener('resize', () => {
   if (!window.matchMedia('(max-width: 900px)').matches) {
     closeMenu();
@@ -353,7 +358,8 @@ function setSeason(season, persist = true) {
   document.documentElement.dataset.season = selected;
   document.documentElement.style.setProperty('--accent', seasonThemes[selected].color);
   const seasonalIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#173c5b"/><circle cx="50" cy="14" r="6" fill="${seasonThemes[selected].color}"/><text x="9" y="42" fill="#fff" font-family="Arial,Helvetica,sans-serif" font-size="28" font-weight="700" letter-spacing="-2">TN</text></svg>`;
-  document.querySelector('link[rel="icon"]').href = `data:image/svg+xml,${encodeURIComponent(seasonalIcon)}`;
+  const seasonalFavicon = document.querySelector('#seasonal-favicon');
+  if (seasonalFavicon) seasonalFavicon.href = `data:image/svg+xml,${encodeURIComponent(seasonalIcon)}`;
   document.querySelectorAll('.season-option').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.season === selected)));
   if (persist) localStorage.setItem('the-navies-season', selected);
 }
@@ -435,11 +441,16 @@ function setLanguage(language, persist = false) {
 const savedLanguage = localStorage.getItem('the-navies-language');
 const hasManualLanguage = localStorage.getItem('the-navies-language-manual') === '1';
 const supportedLanguages = Object.keys(translations);
+const forcedLanguage = supportedLanguages.includes(window.__naviesForcedLanguage) ? window.__naviesForcedLanguage : null;
 const browserLanguage = [navigator.language, ...(navigator.languages || [])]
   .filter(Boolean)
   .map((language) => language.toLowerCase().split('-')[0])
   .find((language) => supportedLanguages.includes(language)) || 'es';
-setLanguage(hasManualLanguage && savedLanguage && supportedLanguages.includes(savedLanguage) ? savedLanguage : browserLanguage);
+const isSearchCrawler = /bot|crawler|spider|slurp|bingpreview|google-inspectiontool/i.test(navigator.userAgent);
+const initialLanguage = forcedLanguage || (hasManualLanguage && savedLanguage && supportedLanguages.includes(savedLanguage)
+  ? savedLanguage
+  : (isSearchCrawler ? 'es' : browserLanguage));
+setLanguage(initialLanguage);
 languageTrigger.addEventListener('click', () => {
   const opening = languageTrigger.getAttribute('aria-expanded') !== 'true';
   languageTrigger.setAttribute('aria-expanded', String(opening));
@@ -447,7 +458,15 @@ languageTrigger.addEventListener('click', () => {
   if (opening) languageOptions.find((option) => option.getAttribute('aria-selected') === 'true').focus();
 });
 languageOptions.forEach((option) => option.addEventListener('click', () => {
-  setLanguage(option.dataset.language, true);
+  const selectedLanguage = option.dataset.language;
+  if (forcedLanguage) {
+    localStorage.setItem('the-navies-language', selectedLanguage);
+    localStorage.setItem('the-navies-language-manual', '1');
+    sessionStorage.setItem('the-navies-internal-navigation', '1');
+    location.href = `../${selectedLanguage}/${location.hash || '#inicio'}`;
+    return;
+  }
+  setLanguage(selectedLanguage, true);
   closeLanguageMenu();
   languageTrigger.focus();
 }));
