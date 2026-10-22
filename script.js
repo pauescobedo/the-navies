@@ -45,6 +45,7 @@ menuButton.addEventListener('click', () => {
 
 const pageViews = [...document.querySelectorAll('[data-page-view]')];
 let revealObserver = null;
+let localizedSpaceTitle = 'Espacio Navy';
 const routeDetails = {
   home: { hash:'#inicio', title:'The Navies' },
   'navies-live': { hash:'#navies-live', title:'Navies Live' },
@@ -81,7 +82,7 @@ function showPage(route, updateHistory = true) {
   });
   document.body.classList.toggle('route-media', selectedRoute === 'navies-live');
   document.body.classList.toggle('route-space', selectedRoute === 'espacio-navy');
-  document.title = routeDetails[selectedRoute].title;
+  document.title = selectedRoute === 'espacio-navy' ? localizedSpaceTitle : routeDetails[selectedRoute].title;
   if (updateHistory) history.pushState({ route:selectedRoute }, '', routeDetails[selectedRoute].hash);
   window.scrollTo({ top:0, left:0, behavior:'instant' });
   requestAnimationFrame(() => {
@@ -247,11 +248,11 @@ Object.assign(translations.en, { formName:'First name', formSurname:'Last name',
 Object.assign(translations.it, { formName:'Nome', formSurname:'Cognome', formEmail:'Email', formPhone:'Telefono (facoltativo)', formPrefix:'Prefisso internazionale', formPhoneNumber:'Numero di telefono', formMessage:'Messaggio', bookingDetails:'Dati per l’ingaggio (facoltativi)', formDate:'Data', formTime:'Ora', formPlace:'Luogo', formSubmit:'Apri l’e-mail preparata', formNote:'Potrai controllare e inviare il messaggio dalla tua app di posta.' });
 Object.assign(translations.fr, { formName:'Prénom', formSurname:'Nom de famille', formEmail:'E-mail', formPhone:'Téléphone (facultatif)', formPrefix:'Indicatif international', formPhoneNumber:'Numéro de téléphone', formMessage:'Message', bookingDetails:'Informations d’engagement (facultatives)', formDate:'Date', formTime:'Heure', formPlace:'Lieu', formSubmit:'Ouvrir l’e-mail préparé', formNote:'Vous pourrez vérifier et envoyer le message depuis votre application de messagerie.' });
 
-Object.assign(translations.es, { navHome:'Inicio', navVideos:'Vídeos', navSpace:'Espacio Navy', signIn:'Iniciar sesión', searchLabel:'Buscar en The Navies', searchHelp:'Prueba con “conciertos”, “banda”, “vídeos” o “contacto”.' });
-Object.assign(translations.ca, { navHome:'Inici', navVideos:'Vídeos', navSpace:'Espai Navy', signIn:'Iniciar sessió', searchLabel:'Cerca a The Navies', searchHelp:'Prova amb “concerts”, “banda”, “vídeos” o “contacte”.' });
-Object.assign(translations.en, { navHome:'Home', navVideos:'Videos', navSpace:'Navy Space', signIn:'Sign in', searchLabel:'Search The Navies', searchHelp:'Try “concerts”, “band”, “videos” or “contact”.' });
-Object.assign(translations.it, { navHome:'Home', navVideos:'Video', navSpace:'Spazio Navy', signIn:'Accedi', searchLabel:'Cerca in The Navies', searchHelp:'Prova “concerti”, “band”, “video” o “contatti”.' });
-Object.assign(translations.fr, { navHome:'Accueil', navVideos:'Vidéos', navSpace:'Espace Navy', signIn:'Se connecter', searchLabel:'Rechercher sur The Navies', searchHelp:'Essayez « concerts », « groupe », « vidéos » ou « contact ».' });
+Object.assign(translations.es, { navHome:'Inicio', navVideos:'Vídeos', navSpace:'Espacio Navy', spaceTitle:'Espacio<br><em>Navy.</em>', signIn:'Iniciar sesión', searchLabel:'Buscar en The Navies', searchHelp:'Prueba con “conciertos”, “banda”, “vídeos” o “contacto”.' });
+Object.assign(translations.ca, { navHome:'Inici', navVideos:'Vídeos', navSpace:'Espai Navy', spaceTitle:'Espai<br><em>Navy.</em>', signIn:'Iniciar sessió', searchLabel:'Cerca a The Navies', searchHelp:'Prova amb “concerts”, “banda”, “vídeos” o “contacte”.' });
+Object.assign(translations.en, { navHome:'Home', navVideos:'Videos', navSpace:'Navy Space', spaceTitle:'Navy<br><em>Space.</em>', signIn:'Sign in', searchLabel:'Search The Navies', searchHelp:'Try “concerts”, “band”, “videos” or “contact”.' });
+Object.assign(translations.it, { navHome:'Home', navVideos:'Video', navSpace:'Spazio Navy', spaceTitle:'Spazio<br><em>Navy.</em>', signIn:'Accedi', searchLabel:'Cerca in The Navies', searchHelp:'Prova “concerti”, “band”, “video” o “contatti”.' });
+Object.assign(translations.fr, { navHome:'Accueil', navVideos:'Vidéos', navSpace:'Espace Navy', spaceTitle:'Espace<br><em>Navy.</em>', signIn:'Se connecter', searchLabel:'Rechercher sur The Navies', searchHelp:'Essayez « concerts », « groupe », « vidéos » ou « contact ».' });
 
 Object.assign(translations.es, { videoLabel:'The Navies en pantalla', videoTitle:'El directo,<br><em>también aquí.</em>', videoIntro:'Un espacio para revivir conciertos, ensayos y momentos de la banda. Por ahora verás ejemplos preparados para sustituir por vuestros vídeos.', featuredVideo:'Vídeo destacado · Próximamente', featuredCopy:'Aquí irá el vídeo principal del último concierto de The Navies.', watchVideo:'Ver vídeo', liveVideos:'En directo', nextRecording:'Próxima grabación', behindScenes:'Ensayos & backstage', rehearsalRoom:'Desde la sala de ensayo', howItSounds:'Cómo suena The Navies', betweenSongs:'Entre canciones', videoPlaceholder:'Vídeo provisional. Sustituye esta tarjeta por un enlace de YouTube o un archivo de vídeo cuando esté disponible.', privateArea:'Área privada de la banda', spaceIntro:'Partituras, materiales y conversación interna en un mismo lugar.', demoVersion:'Versión de demostración', memberAccess:'Acceso de miembros', loginCopy:'Introduce tus credenciales para acceder al espacio interno.', enterSpace:'Entrar', memberArea:'Espacio de miembros', hello:'Hola', signOut:'Cerrar sesión', scores:'Partituras', scoresCopy:'Documentos provisionales preparados para enlazar los PDF definitivos.', chatCopy:'Demostración local: estos mensajes solo aparecen en este dispositivo.' });
 Object.assign(translations.ca, { videoLabel:'The Navies en pantalla', videoTitle:'El directe,<br><em>també aquí.</em>', videoIntro:'Un espai per reviure concerts, assajos i moments de la banda. De moment hi trobaràs exemples preparats per substituir pels vostres vídeos.', featuredVideo:'Vídeo destacat · Pròximament', featuredCopy:'Aquí hi anirà el vídeo principal de l’últim concert de The Navies.', watchVideo:'Veure vídeo', liveVideos:'En directe', nextRecording:'Pròxima gravació', behindScenes:'Assajos & backstage', rehearsalRoom:'Des de la sala d’assaig', howItSounds:'Com sona The Navies', betweenSongs:'Entre cançons', videoPlaceholder:'Vídeo provisional. Substitueix aquesta targeta per un enllaç de YouTube o un arxiu de vídeo.', privateArea:'Àrea privada de la banda', spaceIntro:'Partitures, materials i conversa interna en un mateix lloc.', demoVersion:'Versió de demostració', memberAccess:'Accés de membres', loginCopy:'Introdueix les credencials per accedir a l’espai intern.', enterSpace:'Entrar', memberArea:'Espai de membres', hello:'Hola', signOut:'Tancar sessió', scores:'Partitures', scoresCopy:'Documents provisionals preparats per enllaçar els PDF definitius.', chatCopy:'Demostració local: aquests missatges només apareixen en aquest dispositiu.' });
@@ -419,6 +420,7 @@ function syncCalendar(language) {
 function setLanguage(language, persist = false) {
   const copy = translations[language] || translations.es;
   currentLanguage = language;
+  localizedSpaceTitle = copy.navSpace || translations.es.navSpace;
   document.documentElement.lang = language;
   document.querySelectorAll('[data-i18n]').forEach((element) => { if (copy[element.dataset.i18n]) element.textContent = copy[element.dataset.i18n]; });
   document.querySelectorAll('[data-i18n-html]').forEach((element) => { if (copy[element.dataset.i18nHtml]) element.innerHTML = copy[element.dataset.i18nHtml]; });
@@ -436,6 +438,7 @@ function setLanguage(language, persist = false) {
     localStorage.setItem('the-navies-language', language);
     localStorage.setItem('the-navies-language-manual', '1');
   }
+  if (document.documentElement.dataset.route === 'espacio-navy') document.title = localizedSpaceTitle;
   syncCalendar(language);
   if (document.querySelector('#account-dialog')) updateAccountUI();
 }
