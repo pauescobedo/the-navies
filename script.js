@@ -359,7 +359,8 @@ function setSeason(season, persist = true) {
   document.documentElement.style.setProperty('--accent', seasonThemes[selected].color);
   const seasonalIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 64 64"><rect width="64" height="64" rx="16" fill="#173c5b"/><circle cx="50" cy="14" r="6" fill="${seasonThemes[selected].color}"/><text x="9" y="42" fill="#fff" font-family="Arial,Helvetica,sans-serif" font-size="28" font-weight="700" letter-spacing="-2">TN</text></svg>`;
   const seasonalFavicon = document.querySelector('#seasonal-favicon');
-  if (seasonalFavicon) seasonalFavicon.href = `data:image/svg+xml,${encodeURIComponent(seasonalIcon)}`;
+  const crawlerRequest = /bot|crawler|spider|slurp|bingpreview|google-inspectiontool/i.test(navigator.userAgent);
+  if (seasonalFavicon && !crawlerRequest) seasonalFavicon.href = `data:image/svg+xml,${encodeURIComponent(seasonalIcon)}`;
   document.querySelectorAll('.season-option').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.season === selected)));
   if (persist) localStorage.setItem('the-navies-season', selected);
 }
