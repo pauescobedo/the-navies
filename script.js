@@ -566,15 +566,31 @@ const authToast = document.createElement('div');
 authToast.className = 'auth-toast';
 authToast.setAttribute('role', 'status');
 authToast.setAttribute('aria-live', 'polite');
+authToast.setAttribute('popover', 'manual');
 document.body.append(authToast);
 let authToastTimer;
+let authToastHideTimer;
 let accountCloseTimer;
 
-function showAuthToast(message) {
+function showAuthToast(message, state = 'active', host = document.body) {
   clearTimeout(authToastTimer);
+  clearTimeout(authToastHideTimer);
+  authToast.classList.remove('visible');
+  if (authToast.parentNode !== host) {
+    if (typeof authToast.hidePopover === 'function' && authToast.matches(':popover-open')) authToast.hidePopover();
+    host.append(authToast);
+  }
   authToast.textContent = message;
-  authToast.classList.add('visible');
-  authToastTimer = setTimeout(() => authToast.classList.remove('visible'), 2200);
+  authToast.classList.toggle('is-closed', state === 'closed');
+  if (typeof authToast.showPopover === 'function' && !authToast.matches(':popover-open')) authToast.showPopover();
+  void authToast.offsetWidth;
+  requestAnimationFrame(() => authToast.classList.add('visible'));
+  authToastTimer = setTimeout(() => {
+    authToast.classList.remove('visible');
+    authToastHideTimer = setTimeout(() => {
+      if (typeof authToast.hidePopover === 'function' && authToast.matches(':popover-open')) authToast.hidePopover();
+    }, 360);
+  }, 2200);
 }
 
 function validNavyMember() {
@@ -582,8 +598,7 @@ function validNavyMember() {
   return navyMembers.includes(member) ? member : null;
 }
 
-function updateAccountUI() {
-  const member = validNavyMember();
+function updateAccountTriggers(member = validNavyMember(), animate = false) {
   document.querySelectorAll('.account-trigger').forEach((trigger) => {
     const guest = trigger.querySelector('.account-guest');
     const avatar = trigger.querySelector('.account-avatar');
@@ -591,7 +606,21 @@ function updateAccountUI() {
     avatar.hidden = !member;
     avatar.textContent = member ? member.charAt(0).toUpperCase() : '';
     trigger.setAttribute('aria-label', member ? `Cuenta de ${navyMemberNames[member]}` : 'Iniciar sesión');
+    if (member && animate) {
+      avatar.classList.remove('account-avatar-entering');
+      void avatar.offsetWidth;
+      avatar.classList.add('account-avatar-entering');
+    } else if (!member && animate) {
+      guest.classList.remove('account-guest-entering');
+      void guest.offsetWidth;
+      guest.classList.add('account-guest-entering');
+    }
   });
+}
+
+function updateAccountUI() {
+  const member = validNavyMember();
+  updateAccountTriggers(member);
   accountDialog.querySelector('.account-login-view').hidden = Boolean(member);
   accountDialog.querySelector('.account-member-view').hidden = !member;
   const copy = translations[currentLanguage] || translations.es;
@@ -615,17 +644,52 @@ function closeAccountDialog() {
   accountCloseTimer = setTimeout(() => accountDialog.close(), 300);
 }
 
-window.naviesLogin = (username, password) => {
+function animateMemberView() {
+  const memberView = accountDialog.querySelector('.account-member-view');
+  memberView.classList.remove('member-entering');
+  void memberView.offsetWidth;
+  memberView.classList.add('member-entering');
+}
+
+window.naviesLogin = (username, password, { openMemberPanel = false } = {}) => {
   const member = String(username).trim().toLowerCase();
   if (!navyMembers.includes(member) || password !== 'navies2026') return false;
   localStorage.setItem('navies-member-session', member);
-  const dialogWasOpen = accountDialog.open;
-  closeAccountDialog();
-  if (dialogWasOpen) setTimeout(updateAccountUI, 300);
-  else updateAccountUI();
+  updateAccountTriggers(member, true);
   window.dispatchEvent(new CustomEvent('navies-auth-change', { detail: { member } }));
   const copy = translations[currentLanguage] || translations.es;
-  showAuthToast(copy.sessionActive || translations.es.sessionActive);
+  const finishLoginPresentation = () => {
+    updateAccountUI();
+    if (openMemberPanel) {
+      if (!accountDialog.open) openAccountDialog();
+      requestAnimationFrame(() => requestAnimationFrame(animateMemberView));
+    }
+    showAuthToast(copy.sessionActive || translations.es.sessionActive, 'active', openMemberPanel && accountDialog.open ? accountDialog : document.body);
+  };
+  const loginView = accountDialog.querySelector('.account-login-view');
+  if (openMemberPanel && accountDialog.open && !loginView.hidden) {
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const panelSwitchDuration = reducedMotion ? 20 : 300;
+    accountDialog.classList.add('switching-view');
+    accountDialog.classList.remove('is-visible');
+    setTimeout(() => {
+      if (!accountDialog.open) {
+        accountDialog.classList.remove('switching-view');
+        updateAccountUI();
+        showAuthToast(copy.sessionActive || translations.es.sessionActive);
+        return;
+      }
+      updateAccountUI();
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        accountDialog.classList.add('is-visible');
+        accountDialog.classList.remove('switching-view');
+        animateMemberView();
+        showAuthToast(copy.sessionActive || translations.es.sessionActive, 'active', accountDialog);
+      }));
+    }, panelSwitchDuration);
+  } else {
+    finishLoginPresentation();
+  }
   if (window.matchMedia('(max-width: 900px)').matches) {
     requestAnimationFrame(() => window.scrollTo({ top:0, left:0, behavior:'instant' }));
   }
@@ -634,13 +698,14 @@ window.naviesLogin = (username, password) => {
 
 window.naviesLogout = () => {
   localStorage.removeItem('navies-member-session');
+  updateAccountTriggers(null, true);
   const dialogWasOpen = accountDialog.open;
   closeAccountDialog();
   if (dialogWasOpen) setTimeout(updateAccountUI, 300);
   else updateAccountUI();
   window.dispatchEvent(new CustomEvent('navies-auth-change', { detail: { member: null } }));
   const copy = translations[currentLanguage] || translations.es;
-  showAuthToast(copy.sessionClosed || translations.es.sessionClosed);
+  showAuthToast(copy.sessionClosed || translations.es.sessionClosed, 'closed');
 };
 
 document.querySelectorAll('.account-trigger').forEach((trigger) => trigger.addEventListener('click', () => {
@@ -653,10 +718,14 @@ accountDialog.addEventListener('click', (event) => { if (event.target === accoun
 accountDialog.addEventListener('cancel', (event) => { event.preventDefault(); closeAccountDialog(); });
 accountDialog.querySelector('.account-login-form').addEventListener('submit', (event) => {
   event.preventDefault();
-  const data = new FormData(event.currentTarget);
-  const success = window.naviesLogin(data.get('username'), data.get('password'));
+  const submittedForm = event.currentTarget;
+  const data = new FormData(submittedForm);
+  const success = window.naviesLogin(data.get('username'), data.get('password'), { openMemberPanel:true });
   accountDialog.querySelector('.account-error').textContent = success ? '' : 'Usuario o contraseña incorrectos.';
-  if (success) event.currentTarget.reset();
+  if (success) {
+    const resetDelay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 20 : 300;
+    setTimeout(() => submittedForm.reset(), resetDelay);
+  }
 });
 accountDialog.querySelector('.account-logout').addEventListener('click', window.naviesLogout);
 updateAccountUI();
