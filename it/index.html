@@ -14,7 +14,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <meta name="navies-build" content="20261022-63">
+  <meta name="navies-build" content="20261022-65">
   <title>The Navies</title>
   <link rel="canonical" href="https://thenavies.com/it/">
   <link rel="alternate" hreflang="x-default" href="https://thenavies.com/">
@@ -50,18 +50,18 @@
     ]
   }
   </script>
-  <style>@media(max-width:900px){html:not(.nav-ready) #main-nav{display:none!important}}</style>
+  <style>html:not(.nav-ready) #main-nav>a::after{opacity:0!important}@media(max-width:900px){html:not(.nav-ready) #main-nav{display:none!important}}</style>
   <script>if('scrollRestoration'in history)history.scrollRestoration='manual'</script>
   <script>try{const b=document.querySelector('meta[name="navies-build"]').content;fetch(`${location.pathname}?comprobar=${Date.now()}`,{cache:'no-store'}).then(r=>r.text()).then(h=>{const n=h.match(/<meta name="navies-build" content="([^"]+)"/)?.[1];if(n&&n!==b){const u=new URL(location.href);u.searchParams.set('version',n);location.replace(u)}}).catch(()=>{})}catch(e){}</script>
   <script>try{const c={spring:'#F4A7C1',summer:'#FFD76A',autumn:'#C77B52',winter:'#A8DADC'},n=performance.getEntriesByType('navigation')[0],i=sessionStorage.getItem('the-navies-internal-navigation')==='1',k=i||(n&&n.type==='back_forward');sessionStorage.removeItem('the-navies-internal-navigation');if(!k)localStorage.removeItem('the-navies-season');const s=k&&localStorage.getItem('the-navies-season')||'autumn';window.__naviesInitialSeason=c[s]?s:'autumn';document.documentElement.dataset.season=window.__naviesInitialSeason;document.documentElement.style.setProperty('--accent',c[window.__naviesInitialSeason])}catch(e){document.documentElement.dataset.season='autumn'}</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="preload" href="../script.js?v=20261022-63" as="script">
-  <link rel="stylesheet" href="../styles.css?v=20261022-63">
-  <link rel="stylesheet" href="../subpages.css?v=20261022-63">
-  <script defer src="../script.js?v=20261022-63"></script>
-  <script defer src="../portal.js?v=20261022-63"></script>
+  <link rel="preload" href="../script.js?v=20261022-65" as="script">
+  <link rel="stylesheet" href="../styles.css?v=20261022-65">
+  <link rel="stylesheet" href="../subpages.css?v=20261022-65">
+  <script defer src="../script.js?v=20261022-65"></script>
+  <script defer src="../portal.js?v=20261022-65"></script>
 </head>
 <body>
   <div class="noise" aria-hidden="true"></div>
@@ -86,7 +86,7 @@
     </div>
     <a class="brand brand-center" href="#inicio" data-route="home" aria-label="The Navies, inicio">THE NAVIES<span>.</span></a>
     <nav id="main-nav" aria-label="Navegación principal">
-      <a class="active" href="#inicio" data-route="home" data-i18n="navHome">Home</a>
+      <a href="#inicio" data-route="home" data-i18n="navHome">Home</a>
       <a href="#navies-live" data-route="navies-live" data-i18n="navVideos">Navies Live</a>
       <a href="#espacio-navy" data-route="espacio-navy" data-i18n="navSpace">Spazio Navy</a>
     </nav>

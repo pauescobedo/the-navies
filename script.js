@@ -1,4 +1,3 @@
-document.documentElement.classList.add('nav-ready');
 const menuButton = document.querySelector('.menu-toggle');
 const navigation = document.querySelector('#main-nav');
 const siteHeader = document.querySelector('.site-header');
@@ -112,6 +111,7 @@ document.querySelectorAll('a.brand[data-route]').forEach((brand) => brand.addEve
 }));
 window.addEventListener('popstate', () => showPage(routeFromHash(), false));
 showPage(routeFromHash(), false);
+document.documentElement.classList.add('nav-ready');
 window.addEventListener('pageshow', () => {
   requestAnimationFrame(() => requestAnimationFrame(() => {
     window.scrollTo({ top:0, left:0, behavior:'instant' });
