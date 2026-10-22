@@ -11,11 +11,11 @@ import re
 ROOT = Path(__file__).resolve().parents[1]
 LANGUAGES = ("es", "ca", "en", "fr", "it")
 DESCRIPTIONS = {
-    "es": "The Navies — grupo de siete músicos jóvenes de La Sagrera con clásicos del rock y del pop en directo.",
-    "ca": "The Navies — grup de set músics joves de la Sagrera amb clàssics del rock i del pop en directe.",
-    "en": "The Navies — a seven-piece young band from La Sagrera performing rock and pop classics live.",
-    "fr": "The Navies — un groupe de sept jeunes musiciens de La Sagrera qui joue en concert des classiques du rock et de la pop.",
-    "it": "The Navies — un gruppo di sette giovani musicisti de La Sagrera che suona dal vivo classici rock e pop.",
+    "es": "Siete músicos compartiendo un mismo escenario, dando nueva vida a clásicos del rock y del pop con energía, personalidad y un sonido propio. The Navies — Música en directo",
+    "ca": "Set músics compartint un mateix escenari, donant nova vida als clàssics del rock i del pop amb energia, personalitat i un so propi. The Navies — Música en directe",
+    "en": "Seven musicians sharing one stage, bringing rock and pop classics to life with energy, personality and a sound of our own. The Navies — Live Music",
+    "fr": "Sept musiciens sur une même scène, donnant vie aux classiques du rock et de la pop avec énergie, personnalité et un son unique. The Navies — Musique live",
+    "it": "Sette musicisti su un unico palco, dando nuova vita ai classici rock e pop con energia, personalità e un sound tutto nostro. The Navies — Musica dal vivo",
 }
 OG_LOCALES = {"es": "es_ES", "ca": "ca_ES", "en": "en_GB", "fr": "fr_FR", "it": "it_IT"}
 EMAILS = {
