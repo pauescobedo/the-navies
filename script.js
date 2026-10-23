@@ -10,7 +10,7 @@ let keepHeaderVisibleUntil = 0;
 function restoreNavigation() {
   clearTimeout(navigationRestoreTimer);
   if (navigation.parentNode !== navigationParent) navigationParent.insertBefore(navigation, navigationNextSibling);
-  navigation.classList.remove('mobile-nav-overlay');
+  navigation.classList.remove('mobile-nav-overlay', 'selection-pending');
 }
 
 function closeMenu() {
@@ -101,9 +101,11 @@ function showPage(route, updateHistory = true) {
 navigation.querySelectorAll('[data-route]').forEach((link) => link.addEventListener('click', (event) => {
   event.preventDefault();
   const route = link.dataset.route;
-  navigation.querySelectorAll('[data-route]').forEach((item) => item.classList.toggle('active', item === link));
+  const isMobile = window.matchMedia('(max-width: 900px)').matches;
+  if (isMobile) navigation.classList.add('selection-pending');
+  else navigation.querySelectorAll('[data-route]').forEach((item) => item.classList.toggle('active', item === link));
   closeMenu();
-  setTimeout(() => showPage(route), window.matchMedia('(max-width: 900px)').matches ? 190 : 0);
+  setTimeout(() => showPage(route), isMobile ? 190 : 0);
 }));
 document.querySelectorAll('a.brand[data-route]').forEach((brand) => brand.addEventListener('click', (event) => {
   event.preventDefault();
@@ -516,6 +518,7 @@ if (contactForm) contactForm.addEventListener('submit', (event) => {
   window.location.href = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(details)}`;
 });
 
+const mobileReveal = window.matchMedia('(max-width: 900px)').matches;
 revealObserver = new IntersectionObserver((entries) => {
   entries.forEach((entry) => {
     if (entry.isIntersecting) {
@@ -523,7 +526,10 @@ revealObserver = new IntersectionObserver((entries) => {
       revealObserver.unobserve(entry.target);
     }
   });
-}, { threshold: 0.12 });
+}, {
+  threshold: mobileReveal ? 0.04 : 0.12,
+  rootMargin: mobileReveal ? '0px 0px -3% 0px' : '0px'
+});
 
 document.querySelectorAll('.reveal').forEach((element) => revealObserver.observe(element));
 const year = document.querySelector('#year');
@@ -567,7 +573,9 @@ authToast.className = 'auth-toast';
 authToast.setAttribute('role', 'status');
 authToast.setAttribute('aria-live', 'polite');
 authToast.setAttribute('popover', 'manual');
+authToast.innerHTML = '<span class="auth-toast-indicator" aria-hidden="true"></span><span class="auth-toast-message"></span>';
 document.body.append(authToast);
+const authToastMessage = authToast.querySelector('.auth-toast-message');
 let authToastTimer;
 let authToastHideTimer;
 let accountCloseTimer;
@@ -580,7 +588,7 @@ function showAuthToast(message, state = 'active', host = document.body) {
     if (typeof authToast.hidePopover === 'function' && authToast.matches(':popover-open')) authToast.hidePopover();
     host.append(authToast);
   }
-  authToast.textContent = message;
+  authToastMessage.textContent = message;
   authToast.classList.toggle('is-closed', state === 'closed');
   if (typeof authToast.showPopover === 'function' && !authToast.matches(':popover-open')) authToast.showPopover();
   void authToast.offsetWidth;
