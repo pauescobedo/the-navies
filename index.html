@@ -4,16 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Siete músicos compartiendo un mismo escenario, dando nueva vida a clásicos del rock y del pop con energía, personalidad y un sonido propio. The Navies — Música en directo">
+  <meta name="application-name" content="The Navies">
   <meta name="googlebot" content="notranslate">
   <meta property="og:site_name" content="The Navies">
   <meta property="og:title" content="The Navies">
   <meta property="og:image" content="https://thenavies.com/icons/pwa-512.png">
   <meta property="og:locale" content="es_ES">
+  <meta name="twitter:title" content="The Navies">
+  <meta name="twitter:image" content="https://thenavies.com/icons/pwa-512.png">
   <meta name="theme-color" content="#edf1f4">
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <meta name="navies-build" content="20261023-78">
+  <meta name="navies-build" content="20261023-79">
   <title>The Navies</title>
   <link rel="canonical" href="https://thenavies.com/">
   <link rel="alternate" hreflang="x-default" href="https://thenavies.com/">
@@ -49,6 +52,17 @@
     ]
   }
   </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "@id": "https://thenavies.com/#website",
+    "url": "https://thenavies.com/",
+    "name": "The Navies",
+    "alternateName": "The Navies",
+    "publisher": { "@id": "https://thenavies.com/#music-group" }
+  }
+  </script>
   <style>html:not(.nav-ready) #main-nav>a::after{opacity:0!important}@media(max-width:900px){html:not(.nav-ready) #main-nav{display:none!important}}</style>
   <script>if('scrollRestoration'in history)history.scrollRestoration='manual'</script>
   <script>try{const p=location.pathname,b=/bot|crawler|spider|slurp|bingpreview|google-inspectiontool/i.test(navigator.userAgent);if(location.protocol!=='file:'&&!b&&(p==='/'||p.endsWith('/index.html'))){const a=['ca','es','en','fr','it'],m=localStorage.getItem('the-navies-language-manual')==='1',s=localStorage.getItem('the-navies-language'),d=[navigator.language,...(navigator.languages||[])].filter(Boolean).map(x=>x.toLowerCase().split('-')[0]).find(x=>a.includes(x))||'es',l=m&&a.includes(s)?s:d;location.replace(`/${l}/${location.hash||'#inicio'}`)}}catch(e){}</script>
@@ -57,11 +71,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="preload" href="script.js?v=20261023-78" as="script">
-  <link rel="stylesheet" href="styles.css?v=20261023-78">
-  <link rel="stylesheet" href="subpages.css?v=20261023-78">
-  <script defer src="script.js?v=20261023-78"></script>
-  <script defer src="portal.js?v=20261023-78"></script>
+  <link rel="preload" href="script.js?v=20261023-79" as="script">
+  <link rel="stylesheet" href="styles.css?v=20261023-79">
+  <link rel="stylesheet" href="subpages.css?v=20261023-79">
+  <script defer src="script.js?v=20261023-79"></script>
+  <script defer src="portal.js?v=20261023-79"></script>
 </head>
 <body>
   <div class="noise" aria-hidden="true"></div>
@@ -84,7 +98,7 @@
       
 <button class="account-trigger" type="button" aria-label="Iniciar sesión"><span class="account-guest" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.25"></circle><path d="M5.5 19c.65-3.6 3-5.5 6.5-5.5s5.85 1.9 6.5 5.5"></path></svg></span><span class="account-avatar" hidden></span></button>
     </div>
-    <a class="brand brand-center" href="#inicio" data-route="home" aria-label="The Navies, inicio">THE NAVIES<span>.</span></a>
+    <h1 class="brand-heading brand-center"><a class="brand" href="#inicio" data-route="home" aria-label="The Navies, inicio">THE NAVIES<span aria-hidden="true">.</span></a></h1>
     <nav id="main-nav" aria-label="Navegación principal">
       <a href="#inicio" data-route="home" data-i18n="navHome">Inicio</a>
       <a href="#navies-live" data-route="navies-live" data-i18n="navVideos">Navies Live</a>
@@ -101,7 +115,7 @@
     <section class="hero" id="inicio">
       <div class="hero-copy reveal">
         <p class="eyebrow"><span></span> <span data-i18n="genreLine">Rock · Pop · Clásicos</span></p>
-        <h1 data-i18n-html="heroTitle">Clásicos de siempre.<br><em>En directo, como nunca.</em></h1>
+        <p class="hero-title" data-i18n-html="heroTitle">Clásicos de siempre.<br><em>En directo, como nunca.</em></p>
         <p class="hero-intro" data-i18n="heroIntro">Somos siete músicos jóvenes unidos por las ganas de tocar en directo y llevar clásicos del rock y del pop a cada escenario con energía y personalidad.</p>
         <div class="hero-actions" data-nosnippet>
           <a class="button button-primary" href="#directo"><span data-i18n="nextShow">Próximo concierto</span> <span>↓</span></a>
