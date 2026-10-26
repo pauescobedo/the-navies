@@ -328,6 +328,10 @@ body.route-media .account-member-icon { color:var(--ink-deep); background:var(--
 
 @media (max-width: 900px) {
   html,body { width:100%; max-width:100%; overflow-x:hidden; overflow-x:clip; touch-action:pan-y pinch-zoom; }
+  body { -webkit-overflow-scrolling:touch; }
+  .site-header { backface-visibility:hidden; transform:translate3d(0,0,0); }
+  .site-header.header-hidden { transform:translate3d(0,-110%,0); }
+  .noise { backface-visibility:hidden; }
   .site-header { height: 76px; grid-template-columns: 1fr auto auto; column-gap: 10px; }
   .site-header:not(.header-scrolled) { background:transparent; border-bottom-color:transparent; box-shadow:none; backdrop-filter:none; }
   .menu-toggle { grid-column: 3; grid-row: 1; justify-self: end; display: grid; gap: 4px; width: 42px; height: 42px; place-content: center; border: 1px solid var(--line); border-radius: 50%; background: rgba(255,255,255,.5); z-index: 2; }
