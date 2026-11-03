@@ -51,6 +51,465 @@ const routeDetails = {
   'espacio-navy': { hash:'#espacio-navy', title:'Espacio Navy' }
 };
 
+const countdownLanding = document.querySelector('#countdown-landing');
+const countdownStart = document.querySelector('#countdown-start');
+const countdownEnter = document.querySelector('#countdown-enter');
+const countdownAudio = document.querySelector('#countdown-audio');
+const countdownVolume = document.querySelector('#countdown-volume');
+const concertMoment = new Date('2026-11-21T13:00:00+01:00').getTime();
+const countdownTracks = [
+  { file:'shake-it-off', artist:'Taylor Swift', title:'Shake It Off', start:163, end:216, fadeAtEnd:true },
+  { file:'baby-one-more-time', artist:'Britney Spears', title:'…Baby One More Time', start:166, end:210, fadeAtEnd:true },
+  { file:'sweet-caroline', artist:'Neil Diamond', title:'Sweet Caroline', start:128, end:160, fadeAtEnd:true },
+  { file:'dont-look-back-in-anger', artist:'Oasis', title:"Don't Look Back in Anger", start:219 },
+  { file:'the-final-countdown', artist:'Europe', title:'The Final Countdown', start:244, fadeAtEnd:true },
+  { file:'have-you-ever-seen-the-rain', artist:'Creedence Clearwater Revival', title:'Have You Ever Seen the Rain?', start:101, fadeAtEnd:true }
+];
+const countdownMusicVolume = .24;
+const countdownFadeInDuration = 1600;
+const countdownFadeOutDuration = 2000;
+let countdownTrackIndex = Math.floor(Math.random() * countdownTracks.length);
+let countdownTimer = null;
+let countdownFadeFrame = null;
+let countdownEndFadeStarted = false;
+let countdownLeaving = false;
+let countdownHasPlayed = false;
+let countdownChangingTrack = false;
+let countdownStartConfirmed = false;
+let countdownFadeInStarted = false;
+let countdownMuted = false;
+let countdownTrackQueue = [];
+let countdownTrackNoticeTimer = null;
+let countdownPreloadTimer = null;
+let countdownPreparation = null;
+let countdownPreparedIndex = -1;
+let countdownPreparationId = 0;
+const naviesIsIOS = /iP(?:hone|ad|od)/.test(navigator.userAgent)
+  || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+let naviesMobileAudioContext = null;
+const naviesMobileAudioGains = new WeakMap();
+const naviesMobileAudioLevels = new WeakMap();
+const naviesMobileAudioMuted = new WeakMap();
+const naviesMobileAudioPending = new WeakSet();
+const naviesMobileAudioPromises = new WeakMap();
+
+function ensureAudioGain(audio) {
+  if (!audio || !naviesIsIOS) return null;
+  if (naviesMobileAudioGains.has(audio)) return naviesMobileAudioGains.get(audio);
+  if (naviesMobileAudioPending.has(audio)) return naviesMobileAudioPromises.get(audio) || null;
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) return null;
+  naviesMobileAudioPending.add(audio);
+  naviesMobileAudioLevels.set(audio, Number.isFinite(audio.volume) ? audio.volume : 1);
+  const intendedMutedState = naviesMobileAudioMuted.get(audio) ?? audio.muted;
+  naviesMobileAudioMuted.set(audio, intendedMutedState);
+  audio.muted = true;
+  try {
+    if (!naviesMobileAudioContext) naviesMobileAudioContext = new AudioContextClass();
+    const activate = naviesMobileAudioContext.state === 'running'
+      ? Promise.resolve()
+      : naviesMobileAudioContext.resume();
+    const activationPromise = Promise.resolve(activate).then(() => {
+      if (naviesMobileAudioContext.state !== 'running') throw new Error('Audio context unavailable');
+      const source = naviesMobileAudioContext.createMediaElementSource(audio);
+      const gain = naviesMobileAudioContext.createGain();
+      gain.gain.value = intendedMutedState ? 0 : (naviesMobileAudioLevels.get(audio) ?? 1);
+      source.connect(gain).connect(naviesMobileAudioContext.destination);
+      audio.volume = 1;
+      naviesMobileAudioGains.set(audio, gain);
+      naviesMobileAudioPending.delete(audio);
+      naviesMobileAudioPromises.delete(audio);
+      audio.muted = intendedMutedState;
+      return gain;
+    }).catch(() => {
+      naviesMobileAudioPending.delete(audio);
+      naviesMobileAudioPromises.delete(audio);
+      audio.muted = intendedMutedState;
+      return null;
+    });
+    naviesMobileAudioPromises.set(audio, activationPromise);
+    return activationPromise;
+  } catch (error) {
+    naviesMobileAudioPending.delete(audio);
+    naviesMobileAudioPromises.delete(audio);
+    audio.muted = intendedMutedState;
+  }
+  return null;
+}
+
+function resumeNaviesAudio() {
+  if (naviesIsIOS && naviesMobileAudioContext?.state === 'suspended') {
+    naviesMobileAudioContext.resume().catch(() => {});
+  }
+}
+
+function getAudioLevel(audio) {
+  const gain = naviesMobileAudioGains.get(audio);
+  if (gain) return gain.gain.value;
+  return naviesMobileAudioLevels.get(audio) ?? audio.volume;
+}
+
+function setAudioLevel(audio, level) {
+  const safeLevel = Math.max(0, Math.min(1, level));
+  naviesMobileAudioLevels.set(audio, safeLevel);
+  const gain = naviesMobileAudioGains.get(audio);
+  if (gain) gain.gain.value = naviesMobileAudioMuted.get(audio) ? 0 : safeLevel;
+  else {
+    try { audio.volume = safeLevel; } catch (error) {}
+  }
+}
+
+function setAudioMuted(audio, muted) {
+  const nextMuted = Boolean(muted);
+  naviesMobileAudioMuted.set(audio, nextMuted);
+  audio.muted = nextMuted;
+  const gain = naviesMobileAudioGains.get(audio);
+  if (gain) gain.gain.value = nextMuted ? 0 : (naviesMobileAudioLevels.get(audio) ?? 1);
+}
+
+function isAudioMuted(audio) {
+  return naviesMobileAudioMuted.get(audio) ?? audio.muted;
+}
+
+function shuffledTrackIndexes(avoidFirstIndex = -1) {
+  const indexes = countdownTracks.map((_, index) => index);
+  for (let index = indexes.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [indexes[index], indexes[randomIndex]] = [indexes[randomIndex], indexes[index]];
+  }
+  if (indexes.length > 1 && indexes[0] === avoidFirstIndex) [indexes[0], indexes[1]] = [indexes[1], indexes[0]];
+  return indexes;
+}
+
+function showCountdownTrackNotice(duration = 4000) {
+  const notice = document.querySelector('#countdown-track-notice');
+  if (!notice) return;
+  const track = countdownTracks[countdownTrackIndex];
+  notice.textContent = `${track.artist} — ${track.title}`;
+  notice.classList.add('is-visible');
+  window.clearTimeout(countdownTrackNoticeTimer);
+  if (duration > 0) countdownTrackNoticeTimer = window.setTimeout(() => notice.classList.remove('is-visible'), duration);
+}
+
+function updateCountdown() {
+  const remaining = Math.max(0, concertMoment - Date.now());
+  const values = {
+    days:Math.floor(remaining / 86400000),
+    hours:Math.floor((remaining % 86400000) / 3600000),
+    minutes:Math.floor((remaining % 3600000) / 60000),
+    seconds:Math.floor((remaining % 60000) / 1000)
+  };
+  Object.entries(values).forEach(([unit, value]) => {
+    const element = countdownLanding?.querySelector(`[data-countdown-unit="${unit}"]`);
+    if (element) element.textContent = String(value).padStart(2, '0');
+  });
+}
+
+function countdownAudioSource() {
+  const prefix = window.__naviesForcedLanguage ? '../' : '';
+  return `${prefix}audios/${countdownTracks[countdownTrackIndex].file}.mp3`;
+}
+
+function stopCountdownFade() {
+  if (countdownFadeFrame !== null) {
+    window.cancelAnimationFrame(countdownFadeFrame);
+    countdownFadeFrame = null;
+  }
+}
+
+function fadeCountdownAudio(targetVolume, duration, onComplete) {
+  if (!countdownAudio) return;
+  stopCountdownFade();
+  const initialVolume = getAudioLevel(countdownAudio);
+  const startedAt = performance.now();
+  const animate = (now) => {
+    const progress = Math.min(1, (now - startedAt) / duration);
+    const eased = targetVolume > initialVolume
+      ? progress * progress * (3 - (2 * progress))
+      : 1 - Math.pow(1 - progress, 3);
+    setAudioLevel(countdownAudio, initialVolume + ((targetVolume - initialVolume) * eased));
+    if (progress < 1) countdownFadeFrame = window.requestAnimationFrame(animate);
+    else {
+      countdownFadeFrame = null;
+      if (onComplete) onComplete();
+    }
+  };
+  countdownFadeFrame = window.requestAnimationFrame(animate);
+}
+
+function chooseNextCountdownTrack() {
+  if (countdownTracks.length < 2) return 0;
+  if (!countdownTrackQueue.length) countdownTrackQueue = shuffledTrackIndexes(countdownTrackIndex);
+  return countdownTrackQueue.shift();
+}
+
+function prepareCountdownTrack() {
+  if (!countdownAudio) return Promise.reject(new Error('Audio unavailable'));
+  if (countdownPreparation && countdownPreparedIndex === countdownTrackIndex) return countdownPreparation;
+  const preparationId = ++countdownPreparationId;
+  const preparedTrackIndex = countdownTrackIndex;
+  const preparedTrack = countdownTracks[preparedTrackIndex];
+  countdownEndFadeStarted = false;
+  countdownHasPlayed = false;
+  countdownStartConfirmed = false;
+  countdownFadeInStarted = false;
+  countdownAudio.src = countdownAudioSource();
+  countdownAudio.load();
+  countdownPreparedIndex = preparedTrackIndex;
+  countdownPreparation = new Promise((resolve, reject) => {
+    const setStartPoint = () => {
+      cleanup();
+      if (preparationId !== countdownPreparationId || preparedTrackIndex !== countdownTrackIndex) {
+        reject(new Error('Stale audio preparation'));
+        return;
+      }
+      countdownAudio.currentTime = Math.min(preparedTrack.start, Math.max(0, countdownAudio.duration - .25));
+      resolve();
+    };
+    const reportError = () => {
+      cleanup();
+      countdownPreparation = null;
+      countdownPreparedIndex = -1;
+      reject(countdownAudio.error || new Error('Audio unavailable'));
+    };
+    const cleanup = () => {
+      countdownAudio.removeEventListener('loadedmetadata', setStartPoint);
+      countdownAudio.removeEventListener('error', reportError);
+    };
+    if (countdownAudio.readyState >= 1) setStartPoint();
+    else {
+      countdownAudio.addEventListener('loadedmetadata', setStartPoint, { once:true });
+      countdownAudio.addEventListener('error', reportError, { once:true });
+    }
+  });
+  return countdownPreparation;
+}
+
+async function playPreparedCountdownTrack() {
+  if (!countdownAudio || countdownLeaving) return false;
+  stopCountdownFade();
+  resumeNaviesAudio();
+  setAudioLevel(countdownAudio, 0);
+  const intendedStart = countdownTracks[countdownTrackIndex].start;
+  const isFirstPlay = !countdownHasPlayed;
+  const trackIndexAtPlay = countdownTrackIndex;
+  const enforceStartPoint = () => {
+    if (!isFirstPlay || countdownLeaving || countdownTrackIndex !== trackIndexAtPlay) return;
+    try {
+      if (countdownAudio.currentTime < intendedStart - 1) countdownAudio.currentTime = intendedStart;
+      else if (!countdownStartConfirmed) {
+        countdownStartConfirmed = true;
+      }
+    } catch (error) {}
+  };
+  enforceStartPoint();
+  try {
+    await countdownAudio.play();
+    enforceStartPoint();
+    window.setTimeout(enforceStartPoint, 80);
+    window.setTimeout(enforceStartPoint, 260);
+    window.setTimeout(enforceStartPoint, 700);
+    window.setTimeout(enforceStartPoint, 1500);
+    countdownHasPlayed = true;
+    countdownStartConfirmed = true;
+    if (!countdownFadeInStarted) {
+      countdownFadeInStarted = true;
+      fadeCountdownAudio(countdownMusicVolume, countdownFadeInDuration);
+    }
+    showCountdownTrackNotice();
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+async function startCountdownTrack() {
+  try {
+    await prepareCountdownTrack();
+    return await playPreparedCountdownTrack();
+  } catch (error) {
+    return false;
+  }
+}
+
+async function advanceCountdownTrack() {
+  if (countdownLeaving || countdownChangingTrack) return;
+  countdownChangingTrack = true;
+  countdownAudio.pause();
+  countdownTrackIndex = chooseNextCountdownTrack();
+  countdownPreparation = null;
+  countdownPreparedIndex = -1;
+  await startCountdownTrack();
+  countdownChangingTrack = false;
+}
+
+async function revealCountdown() {
+  sessionStorage.setItem('the-navies-countdown-revealed', '1');
+  countdownStart.disabled = true;
+  document.documentElement.classList.remove('countdown-welcome');
+  await Promise.resolve(ensureAudioGain(countdownAudio));
+  resumeNaviesAudio();
+  await startCountdownTrack();
+}
+
+function setCountdownVolumeLabel() {
+  if (!countdownVolume) return;
+  const copy = translations[currentLanguage] || translations.es;
+  countdownVolume.setAttribute('aria-pressed', String(countdownMuted));
+  countdownVolume.setAttribute('aria-label', countdownMuted ? copy.countdownSoundOn : copy.countdownSoundOff);
+  countdownVolume.classList.toggle('is-muted', countdownMuted);
+}
+
+function toggleCountdownVolume() {
+  countdownMuted = !countdownMuted;
+  setAudioMuted(countdownAudio, countdownMuted);
+  setCountdownVolumeLabel();
+}
+
+function activateCountdownExperience() {
+  updateCountdown();
+  if (countdownTimer === null) countdownTimer = window.setInterval(updateCountdown, 1000);
+  prepareCountdownTrack().catch(() => {});
+}
+
+function finishCountdownEntrance() {
+  window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+    document.documentElement.classList.remove('countdown-entering');
+  }));
+}
+
+function startCountdownPreload() {
+  window.clearTimeout(countdownPreloadTimer);
+  document.documentElement.classList.remove('countdown-preloading');
+  void document.documentElement.offsetHeight;
+  document.documentElement.classList.add('countdown-preloading');
+  countdownPreloadTimer = window.setTimeout(() => {
+    document.documentElement.classList.remove('countdown-preloading');
+  }, 2500);
+}
+
+function resetCountdownWelcomeState() {
+  if (typeof siteMusicAudio !== 'undefined' && siteMusicAudio && !siteMusicAudio.paused) siteMusicAudio.pause();
+  stopCountdownFade();
+  countdownAudio.pause();
+  countdownAudio.currentTime = 0;
+  countdownLeaving = false;
+  countdownChangingTrack = false;
+  countdownEndFadeStarted = false;
+  countdownHasPlayed = false;
+  countdownStartConfirmed = false;
+  countdownFadeInStarted = false;
+  countdownTrackIndex = Math.floor(Math.random() * countdownTracks.length);
+  countdownPreparation = null;
+  countdownPreparedIndex = -1;
+  countdownPreparationId += 1;
+  countdownTrackQueue = shuffledTrackIndexes().filter((index) => index !== countdownTrackIndex);
+  countdownStart.disabled = false;
+  sessionStorage.removeItem('the-navies-countdown-revealed');
+  document.documentElement.classList.remove('countdown-exiting');
+}
+
+function openCountdownWelcome({ showPreloader = true } = {}) {
+  if (document.documentElement.classList.contains('countdown-opening')) return;
+  resetCountdownWelcomeState();
+  if (!showPreloader) {
+    const root = document.documentElement;
+    root.classList.add('countdown-opening');
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+      root.classList.add('countdown-opening-active');
+    }));
+    window.setTimeout(() => {
+      root.classList.add('countdown-entry', 'countdown-welcome', 'countdown-welcome-arriving');
+      root.classList.remove('countdown-opening', 'countdown-opening-active');
+      history.replaceState({ route:'countdown' }, '', location.pathname);
+      window.scrollTo({ top:0, behavior:'auto' });
+      activateCountdownExperience();
+      window.setTimeout(() => root.classList.remove('countdown-welcome-arriving'), 900);
+    }, 900);
+    return;
+  }
+  document.documentElement.classList.add('countdown-entry', 'countdown-welcome', 'countdown-entering');
+  history.replaceState({ route:'countdown' }, '', location.pathname);
+  window.scrollTo({ top:0, behavior:'auto' });
+  activateCountdownExperience();
+  startCountdownPreload();
+  finishCountdownEntrance();
+}
+
+function leaveCountdown() {
+  countdownLeaving = true;
+  window.clearTimeout(countdownPreloadTimer);
+  document.documentElement.classList.remove('countdown-preloading');
+  const handoffIndex = countdownTrackIndex;
+  prepareSiteMusicFromCountdown(handoffIndex);
+  if (countdownTimer !== null) {
+    window.clearInterval(countdownTimer);
+    countdownTimer = null;
+  }
+  if (countdownAudio) {
+    if (countdownAudio.paused) {
+      countdownAudio.currentTime = 0;
+    } else {
+      fadeCountdownAudio(0, countdownFadeOutDuration, () => {
+        countdownAudio.pause();
+        countdownAudio.currentTime = 0;
+      });
+    }
+  }
+  sessionStorage.removeItem('the-navies-countdown-revealed');
+  history.replaceState({ route:'home' }, '', '#inicio');
+  showPage('home', false);
+  const homeView = pageViews.find((view) => view.dataset.pageView === 'home');
+  homeView?.classList.remove('route-entering');
+  homeView?.querySelectorAll('.reveal').forEach((element) => element.classList.add('visible'));
+  document.querySelector('.footer-quick-player')?.classList.remove('quick-route-entering');
+  void document.documentElement.offsetHeight;
+  document.documentElement.classList.add('countdown-exiting', 'site-returning');
+  document.documentElement.classList.remove('countdown-entry', 'countdown-welcome');
+  window.setTimeout(() => document.documentElement.classList.remove('countdown-exiting', 'site-returning'), 1100);
+}
+
+if (countdownLanding) {
+  const countdownSoundControl = document.createElement('div');
+  countdownSoundControl.className = 'countdown-sound-control';
+  countdownVolume?.insertAdjacentElement('beforebegin', countdownSoundControl);
+  if (countdownVolume) countdownSoundControl.append(countdownVolume);
+  const countdownTrackNotice = document.createElement('span');
+  countdownTrackNotice.id = 'countdown-track-notice';
+  countdownTrackNotice.className = 'countdown-track-notice';
+  countdownTrackNotice.setAttribute('aria-live', 'polite');
+  countdownSoundControl.append(countdownTrackNotice);
+  countdownStart?.addEventListener('click', revealCountdown);
+  countdownEnter.addEventListener('click', leaveCountdown);
+  countdownVolume?.addEventListener('click', toggleCountdownVolume);
+  countdownVolume?.addEventListener('mouseenter', () => showCountdownTrackNotice(0));
+  countdownVolume?.addEventListener('mouseleave', () => {
+    window.clearTimeout(countdownTrackNoticeTimer);
+    countdownTrackNoticeTimer = window.setTimeout(() => countdownTrackNotice.classList.remove('is-visible'), 180);
+  });
+  countdownAudio.addEventListener('timeupdate', () => {
+    if (!countdownHasPlayed || countdownChangingTrack || countdownLeaving) return;
+    const track = countdownTracks[countdownTrackIndex];
+    const trackEnd = track.end || countdownAudio.duration;
+    if (!Number.isFinite(trackEnd)) return;
+    const remaining = trackEnd - countdownAudio.currentTime;
+    if (track.fadeAtEnd && !countdownEndFadeStarted && remaining <= 2.1 && remaining > 0) {
+      countdownEndFadeStarted = true;
+      fadeCountdownAudio(0, Math.min(countdownFadeOutDuration, remaining * 1000));
+    }
+    if (track.end && remaining <= 0) advanceCountdownTrack();
+  });
+  countdownAudio.addEventListener('ended', () => {
+    if (!countdownHasPlayed || countdownChangingTrack || countdownLeaving) return;
+    advanceCountdownTrack();
+  });
+  if (document.documentElement.classList.contains('countdown-entry')) {
+    activateCountdownExperience();
+    if (document.documentElement.classList.contains('countdown-welcome')) startCountdownPreload();
+    if (document.documentElement.classList.contains('countdown-entering')) finishCountdownEntrance();
+  }
+}
+
 function routeFromHash() {
   if (location.hash === '#navies-live') return 'navies-live';
   if (location.hash === '#espacio-navy') return 'espacio-navy';
@@ -75,6 +534,13 @@ function showPage(route, updateHistory = true) {
     selectedView.addEventListener('animationend', () => {
       selectedView.classList.remove('route-entering');
     }, { once:true });
+  }
+  const quickPlayer = document.querySelector('.footer-quick-player');
+  if (quickPlayer) {
+    quickPlayer.classList.remove('quick-route-entering');
+    void quickPlayer.offsetHeight;
+    quickPlayer.classList.add('quick-route-entering');
+    quickPlayer.addEventListener('animationend', () => quickPlayer.classList.remove('quick-route-entering'), { once:true });
   }
   navigation.querySelectorAll('[data-route]').forEach((link) => {
     link.classList.toggle('active', link.dataset.route === selectedRoute);
@@ -109,15 +575,16 @@ navigation.querySelectorAll('[data-route]').forEach((link) => link.addEventListe
 }));
 document.querySelectorAll('a.brand[data-route]').forEach((brand) => brand.addEventListener('click', (event) => {
   event.preventDefault();
-  showPage('home');
+  openCountdownWelcome({ showPreloader:false });
 }));
 document.querySelectorAll('[data-scroll-target]').forEach((link) => link.addEventListener('click', (event) => {
   const target = document.getElementById(link.dataset.scrollTarget);
   if (!target) return;
   event.preventDefault();
-  target.scrollIntoView({
+  const extraOffset = link.dataset.scrollTarget === 'directo' ? 24 : 0;
+  window.scrollTo({
+    top: window.scrollY + target.getBoundingClientRect().top + extraOffset,
     behavior: window.matchMedia('(prefers-reduced-motion:reduce)').matches ? 'auto' : 'smooth',
-    block: 'start'
   });
   history.replaceState(history.state, '', `#${link.dataset.scrollTarget}`);
 }));
@@ -283,6 +750,11 @@ Object.assign(translations.ca, { sagreraFestName:'Festes de La Sagrera 2026', ca
 Object.assign(translations.en, { sagreraFestName:'La Sagrera Neighbourhood Festival 2026', calendarCopy:'Rehearsals and performances scheduled for the La Sagrera neighbourhood festival.' });
 Object.assign(translations.it, { sagreraFestName:'Festa di quartiere de La Sagrera 2026', calendarCopy:'Prove ed esibizioni previste per la festa di quartiere de La Sagrera.' });
 Object.assign(translations.fr, { sagreraFestName:'Fête de quartier de La Sagrera 2026', calendarCopy:'Répétitions et concerts prévus pour la fête de quartier de La Sagrera.' });
+Object.assign(translations.es, { usefulLinks:'Enlaces útiles', usefulLinksCopy:'Accesos directos a los recursos compartidos de la banda.', driveLinkCopy:'Archivos compartidos', spotifyLinkCopy:'Lista de The Navies', appleMusicLinkCopy:'Lista de The Navies' });
+Object.assign(translations.ca, { usefulLinks:'Enllaços útils', usefulLinksCopy:'Accessos directes als recursos compartits de la banda.', driveLinkCopy:'Arxius compartits', spotifyLinkCopy:'Llista de The Navies', appleMusicLinkCopy:'Llista de The Navies' });
+Object.assign(translations.en, { usefulLinks:'Useful links', usefulLinksCopy:'Quick access to the band’s shared resources.', driveLinkCopy:'Shared files', spotifyLinkCopy:'The Navies playlist', appleMusicLinkCopy:'The Navies playlist' });
+Object.assign(translations.it, { usefulLinks:'Link utili', usefulLinksCopy:'Accesso rapido alle risorse condivise della band.', driveLinkCopy:'File condivisi', spotifyLinkCopy:'Playlist dei The Navies', appleMusicLinkCopy:'Playlist dei The Navies' });
+Object.assign(translations.fr, { usefulLinks:'Liens utiles', usefulLinksCopy:'Accès direct aux ressources partagées du groupe.', driveLinkCopy:'Fichiers partagés', spotifyLinkCopy:'Playlist de The Navies', appleMusicLinkCopy:'Playlist de The Navies' });
 
 const memberBios = {
   es: {
@@ -301,19 +773,23 @@ memberBios.ca = {
 memberBios.en = {
   aina:['Vocals','Aina brings a bright voice and a natural stage presence. She loves melodies that begin intimately and end with the whole square singing.'], candela:['Vocals','Candela combines character, sensitivity and a direct connection with the audience. Her favourite place is where a song begins to grow.'], mariona:['Vocals','Mariona completes the vocal line-up with warmth and versatility. She enjoys building harmonies and finding new character in familiar songs.'], emma:['Bass','Emma holds The Navies together with solid, musical bass lines, linking the rhythm, the voices and everything happening on stage.'], carles:['Guitar','Carles shapes the band’s sound with precise guitars, texture and just the right amount of rock energy—always serving the song.'], fermito:['Keys','Fermito expands the sound with piano, synths and arrangements that help every track grow without losing its essence.'], pau:['Drums','Pau drives the live show from the drums: solid, dynamic and alert to every change. His aim is simple—to make the band breathe as one.']
 };
-memberBios.it = memberBios.en;
-memberBios.fr = memberBios.en;
+memberBios.it = { ...memberBios.en };
+memberBios.fr = { ...memberBios.en };
 Object.assign(memberBios.es, {
-  vocals:['Tres voces','The Navies cuenta con tres cantantes. Juntas reparten melodías, armonías y coros para dar variedad, fuerza y emoción a cada canción.'], bass:['Bajo','Una bajista sostiene la base grave del grupo y conecta la batería con la armonía para que cada tema avance con solidez.'], guitar:['Guitarra','Un guitarrista aporta riffs, acordes, texturas y ese punto de carácter rock que atraviesa el repertorio.'], keys:['Teclados','Un teclista amplía el sonido con pianos, sintetizadores y arreglos que completan cada canción sin perder su esencia.'], drums:['Batería','Pau Escobedo marca el pulso desde la batería, dirige la energía y mantiene unidos a los siete músicos durante todo el directo.']
+  vocals:['Tres voces','Tres cantantes comparten melodías, armonías y coros para dar fuerza y emoción a cada canción.'], bass:['Bajo','Una bajista sostiene la base grave y conecta el ritmo con la armonía.'], guitar:['Guitarra','Un guitarrista aporta riffs, acordes y el carácter rock del repertorio.'], keys:['Teclados','Se encarga de aportar pianos, sintetizadores y arreglos que amplían el sonido.'], drums:['Batería','Hace que la batería marque el pulso, mueva la energía y mantenga unida a la banda.']
 });
 Object.assign(memberBios.ca, {
-  vocals:['Tres veus','The Navies compta amb tres cantants. Juntes reparteixen melodies, harmonies i cors per donar varietat, força i emoció a cada cançó.'], bass:['Baix','Una baixista sosté la base greu del grup i connecta la bateria amb l’harmonia perquè cada tema avanci amb solidesa.'], guitar:['Guitarra','Un guitarrista aporta riffs, acords, textures i el punt de caràcter rock que travessa el repertori.'], keys:['Teclats','Un teclista amplia el so amb pianos, sintetitzadors i arranjaments que completen cada cançó.'], drums:['Bateria','En Pau Escobedo marca el pols des de la bateria, dirigeix l’energia i manté units els set músics durant tot el directe.']
+  vocals:['Tres veus','Tres cantants comparteixen melodies, harmonies i cors per donar força i emoció a cada cançó.'], bass:['Baix','Una baixista sosté la base greu i connecta el ritme amb l’harmonia.'], guitar:['Guitarra','Un guitarrista aporta riffs, acords i el caràcter rock del repertori.'], keys:['Teclats','S’encarrega d’aportar pianos, sintetitzadors i arranjaments que amplien el so.'], drums:['Bateria','Fa que la bateria marqui el pols, mogui l’energia i mantingui unida la banda.']
 });
 Object.assign(memberBios.en, {
-  vocals:['Three voices','The Navies has three singers sharing melodies, harmonies and choruses to bring variety, power and emotion to every song.'], bass:['Bass','One bassist anchors the low end and connects drums and harmony, giving every song a solid foundation.'], guitar:['Guitar','One guitarist brings riffs, chords, texture and the rock character running through the set.'], keys:['Keys','One keyboardist expands the sound with piano, synthesisers and arrangements that complete each song.'], drums:['Drums','Pau Escobedo sets the pulse from the drums, drives the energy and keeps all seven musicians together throughout the show.']
+  vocals:['Three voices','Three singers share melodies, harmonies and choruses to bring power and emotion to every song.'], bass:['Bass','One bassist anchors the low end and connects rhythm with harmony.'], guitar:['Guitar','One guitarist brings riffs, chords and the rock character of the set.'], keys:['Keys','Takes care of adding piano, synthesisers and arrangements that expand the sound.'], drums:['Drums','Makes the drums set the pulse, drive the energy and hold the band together.']
 });
-memberBios.it = memberBios.en;
-memberBios.fr = memberBios.en;
+memberBios.it = {
+  vocals:['Tre voci','Tre cantanti condividono melodie, armonie e cori per dare forza ed emozione a ogni brano.'], bass:['Basso','Una bassista sostiene le frequenze basse e collega ritmo e armonia.'], guitar:['Chitarra','Un chitarrista porta riff, accordi e il carattere rock del repertorio.'], keys:['Tastiere','Si occupa di aggiungere pianoforti, sintetizzatori e arrangiamenti che ampliano il suono.'], drums:['Batteria','Fa sì che la batteria segni il ritmo, muova l’energia e tenga unita la band.']
+};
+memberBios.fr = {
+  vocals:['Trois voix','Trois chanteuses partagent mélodies, harmonies et chœurs pour donner force et émotion à chaque morceau.'], bass:['Basse','Une bassiste soutient les graves et relie le rythme à l’harmonie.'], guitar:['Guitare','Un guitariste apporte riffs, accords et le caractère rock du répertoire.'], keys:['Claviers','Se charge d’ajouter pianos, synthétiseurs et arrangements pour élargir le son.'], drums:['Batterie','Fait en sorte que la batterie donne le rythme, porte l’énergie et maintienne le groupe uni.']
+};
 
 const languagePicker = document.querySelector('#language-picker');
 const languageTrigger = languagePicker.querySelector('.language-trigger');
@@ -329,17 +805,37 @@ Object.assign(translations.ca, { visualVocals:'Veus', visualBass:'Baix', visualG
 Object.assign(translations.en, { visualVocals:'Vocals', visualBass:'Bass', visualGuitar:'Guitar', visualKeys:'Keyboards', visualDrums:'Drums', sessionActive:'Signed in', sessionClosed:'Signed out' });
 Object.assign(translations.it, { visualVocals:'Voci', visualBass:'Basso', visualGuitar:'Chitarra', visualKeys:'Tastiere', visualDrums:'Batteria', sessionActive:'Accesso effettuato', sessionClosed:'Sessione chiusa' });
 Object.assign(translations.fr, { visualVocals:'Voix', visualBass:'Basse', visualGuitar:'Guitare', visualKeys:'Claviers', visualDrums:'Batterie', sessionActive:'Session ouverte', sessionClosed:'Session fermée' });
-Object.assign(translations.es, { groupVocals:'Tres cantantes', groupVocalsCopy:'Tres voces para melodías, armonías y coros.', groupBass:'Una bajista', groupBassCopy:'La base grave que une ritmo y armonía.', groupGuitar:'Un guitarrista', groupGuitarCopy:'Riffs, acordes y el carácter rock del grupo.', groupKeys:'Un teclista', groupKeysCopy:'Pianos, sintetizadores y capas de sonido.', groupDrums:'Un batería', groupDrumsCopy:'El pulso que sostiene y empuja todo el directo.', provisionalBio:'Así se completa el sonido de The Navies.' });
-Object.assign(translations.ca, { groupVocals:'Tres cantants', groupVocalsCopy:'Tres veus per a melodies, harmonies i cors.', groupBass:'Una baixista', groupBassCopy:'La base greu que uneix ritme i harmonia.', groupGuitar:'Un guitarrista', groupGuitarCopy:'Riffs, acords i el caràcter rock del grup.', groupKeys:'Un teclista', groupKeysCopy:'Pianos, sintetitzadors i capes de so.', groupDrums:'Un bateria', groupDrumsCopy:'El pols que sosté i impulsa tot el directe.', provisionalBio:'Així es completa el so de The Navies.' });
-Object.assign(translations.en, { groupVocals:'Three singers', groupVocalsCopy:'Three voices for melodies, harmonies and choruses.', groupBass:'One bassist', groupBassCopy:'The low-end foundation joining rhythm and harmony.', groupGuitar:'One guitarist', groupGuitarCopy:'Riffs, chords and the band’s rock character.', groupKeys:'One keyboardist', groupKeysCopy:'Pianos, synthesisers and layers of sound.', groupDrums:'One drummer', groupDrumsCopy:'The pulse driving the whole live show.', provisionalBio:'This is how The Navies completes its sound.' });
-Object.assign(translations.it, { groupVocals:'Tre cantanti', groupVocalsCopy:'Tre voci per melodie, armonie e cori.', groupBass:'Una bassista', groupBassCopy:'La base grave che unisce ritmo e armonia.', groupGuitar:'Un chitarrista', groupGuitarCopy:'Riff, accordi e il carattere rock della band.', groupKeys:'Un tastierista', groupKeysCopy:'Pianoforti, sintetizzatori e strati sonori.', groupDrums:'Un batterista', groupDrumsCopy:'Il ritmo che sostiene e spinge tutto il live.', provisionalBio:'Così si completa il suono dei The Navies.' });
-Object.assign(translations.fr, { groupVocals:'Trois chanteuses', groupVocalsCopy:'Trois voix pour les mélodies, harmonies et chœurs.', groupBass:'Une bassiste', groupBassCopy:'La base grave qui relie rythme et harmonie.', groupGuitar:'Un guitariste', groupGuitarCopy:'Des riffs, des accords et le caractère rock du groupe.', groupKeys:'Un claviériste', groupKeysCopy:'Pianos, synthétiseurs et textures sonores.', groupDrums:'Un batteur', groupDrumsCopy:'Le rythme qui porte tout le concert.', provisionalBio:'Ainsi se construit le son de The Navies.' });
+Object.assign(translations.es, { groupVocals:'Tres cantantes', groupVocalsCopy:'Tres voces para melodías, armonías y coros.', groupBass:'Una bajista', groupBassCopy:'La base grave que une ritmo y armonía.', groupGuitar:'Un guitarrista', groupGuitarCopy:'Riffs, acordes y el carácter rock del grupo.', groupKeys:'Pau Fermosel', groupKeysCopy:'Pianos, sintetizadores y capas que amplían el sonido.', groupDrums:'Pau Escobedo', groupDrumsCopy:'El pulso que mueve la energía y mantiene unida a la banda.', provisionalBio:'Así se completa el sonido de The Navies.' });
+Object.assign(translations.ca, { groupVocals:'Tres cantants', groupVocalsCopy:'Tres veus per a melodies, harmonies i cors.', groupBass:'Una baixista', groupBassCopy:'La base greu que uneix ritme i harmonia.', groupGuitar:'Un guitarrista', groupGuitarCopy:'Riffs, acords i el caràcter rock del grup.', groupKeys:'Pau Fermosel', groupKeysCopy:'Pianos, sintetitzadors i capes que amplien el so.', groupDrums:'Pau Escobedo', groupDrumsCopy:'El pols que mou l’energia i manté unida la banda.', provisionalBio:'Així es completa el so de The Navies.' });
+Object.assign(translations.en, { groupVocals:'Three singers', groupVocalsCopy:'Three voices for melodies, harmonies and choruses.', groupBass:'One bassist', groupBassCopy:'The low-end foundation connecting rhythm and harmony.', groupGuitar:'One guitarist', groupGuitarCopy:'Riffs, chords and the band’s rock character.', groupKeys:'Pau Fermosel', groupKeysCopy:'Piano, synthesisers and layers that expand the sound.', groupDrums:'Pau Escobedo', groupDrumsCopy:'The pulse that drives the energy and holds the band together.', provisionalBio:'This is how The Navies completes its sound.' });
+Object.assign(translations.it, { groupVocals:'Tre cantanti', groupVocalsCopy:'Tre voci per melodie, armonie e cori.', groupBass:'Una bassista', groupBassCopy:'La base grave che unisce ritmo e armonia.', groupGuitar:'Un chitarrista', groupGuitarCopy:'Riff, accordi e il carattere rock della band.', groupKeys:'Pau Fermosel', groupKeysCopy:'Pianoforti, sintetizzatori e strati che ampliano il suono.', groupDrums:'Pau Escobedo', groupDrumsCopy:'Il ritmo che muove l’energia e tiene unita la band.', provisionalBio:'Così si completa il suono dei The Navies.' });
+Object.assign(translations.fr, { groupVocals:'Trois chanteuses', groupVocalsCopy:'Trois voix pour les mélodies, harmonies et chœurs.', groupBass:'Une bassiste', groupBassCopy:'La base grave qui relie rythme et harmonie.', groupGuitar:'Un guitariste', groupGuitarCopy:'Des riffs, des accords et le caractère rock du groupe.', groupKeys:'Pau Fermosel', groupKeysCopy:'Pianos, synthétiseurs et textures qui élargissent le son.', groupDrums:'Pau Escobedo', groupDrumsCopy:'Le rythme qui porte l’énergie et maintient le groupe uni.', provisionalBio:'Ainsi se construit le son de The Navies.' });
+
+Object.assign(translations.es, { countdownWelcomeTitle:'Algo está a punto de sonar', countdownWelcomeCopy:'El 21 de noviembre, siete músicos y un escenario te esperan en Plaza Masadas. El resto, lo tendrás que descubrir en directo.', countdownWelcomeStart:'Descubrir', countdownEventDate:'21 DE NOVIEMBRE', countdownEventTime:'13:00', countdownPlaceLabel:'Lugar', countdownDays:'Días', countdownHours:'Horas', countdownMinutes:'Minutos', countdownSeconds:'Segundos', countdownEnter:'Ir a inicio', memberContinuation:'…a cargo de', memberDialogVocals:'En las <em>voces</em>…', memberDialogBass:'En el <em>bajo</em>…', memberDialogGuitar:'En la <em>guitarra</em>…', memberDialogKeys:'En los <em>teclados</em>…', memberDialogDrums:'En la <em>batería</em>…', countdownEventTime:'13:00', countdownEventVenue:'PLAZA MASADAS', countdownKicker:'Próximo concierto', countdownDateLabel:'Fecha', countdownTimeLabel:'Hora' });
+Object.assign(translations.ca, { countdownWelcomeTitle:'Alguna cosa està a punt de sonar', countdownWelcomeCopy:'El 21 de novembre, set músics i un escenari t’esperen a Plaza Masadas. La resta, l’hauràs de descobrir en directe.', countdownWelcomeStart:'Descobrir', countdownEventDate:'21 DE NOVEMBRE', countdownEventTime:'13:00', countdownEventVenue:'PLAZA MASADAS', countdownKicker:'Pròxim concert', countdownDateLabel:'Data', countdownTimeLabel:'Hora', countdownPlaceLabel:'Lloc', countdownDays:'Dies', countdownHours:'Hores', countdownMinutes:'Minuts', countdownSeconds:'Segons', countdownEnter:'Anar a l’inici', memberInCharge:'A càrrec de', memberDialogKeys:'Als <em>teclats</em>', memberDialogDrums:'A la <em>bateria</em>' });
+Object.assign(translations.en, { countdownWelcomeTitle:'Something is about to begin', countdownWelcomeCopy:'On 21 November, seven musicians and one stage await you at Plaza Masadas. The rest, you’ll have to discover live.', countdownWelcomeStart:'Discover', countdownEventDate:'21 NOVEMBER', countdownEventTime:'13:00', countdownEventVenue:'PLAZA MASADAS', countdownKicker:'Next show', countdownDateLabel:'Date', countdownTimeLabel:'Time', countdownPlaceLabel:'Venue', countdownDays:'Days', countdownHours:'Hours', countdownMinutes:'Minutes', countdownSeconds:'Seconds', countdownEnter:'Go to homepage', memberInCharge:'Featuring', memberDialogKeys:'On <em>keys</em>', memberDialogDrums:'On <em>drums</em>' });
+Object.assign(translations.it, { countdownWelcomeTitle:'Qualcosa sta per iniziare', countdownWelcomeCopy:'Il 21 novembre, sette musicisti e un palco ti aspettano a Plaza Masadas. Il resto dovrai scoprirlo dal vivo.', countdownWelcomeStart:'Scopri', countdownEventDate:'21 NOVEMBRE', countdownEventTime:'13:00', countdownEventVenue:'PLAZA MASADAS', countdownKicker:'Prossimo concerto', countdownDateLabel:'Data', countdownTimeLabel:'Ora', countdownPlaceLabel:'Luogo', countdownDays:'Giorni', countdownHours:'Ore', countdownMinutes:'Minuti', countdownSeconds:'Secondi', countdownEnter:'Vai alla home', memberInCharge:'Con', memberDialogKeys:'Alle <em>tastiere</em>', memberDialogDrums:'Alla <em>batteria</em>' });
+Object.assign(translations.fr, { countdownWelcomeTitle:'Quelque chose va commencer', countdownWelcomeCopy:'Le 21 novembre, sept musiciens et une scène vous attendent à Plaza Masadas. Le reste sera à découvrir en concert.', countdownWelcomeStart:'Découvrir', countdownEventDate:'21 NOVEMBRE', countdownEventTime:'13:00', countdownEventVenue:'PLAZA MASADAS', countdownKicker:'Prochain concert', countdownDateLabel:'Date', countdownTimeLabel:'Heure', countdownPlaceLabel:'Lieu', countdownDays:'Jours', countdownHours:'Heures', countdownMinutes:'Minutes', countdownSeconds:'Secondes', countdownEnter:'Aller à l’accueil', memberInCharge:'Avec', memberDialogKeys:'Aux <em>claviers</em>', memberDialogDrums:'À la <em>batterie</em>' });
+Object.assign(translations.ca, { memberContinuation:'…a càrrec de', memberDialogVocals:'En les <em>veus</em>…', memberDialogBass:'En el <em>baix</em>…', memberDialogGuitar:'En la <em>guitarra</em>…', memberDialogKeys:'En els <em>teclats</em>…', memberDialogDrums:'En la <em>bateria</em>…' });
+Object.assign(translations.en, { memberContinuation:'…featuring', memberDialogVocals:'On <em>vocals</em>…', memberDialogBass:'On <em>bass</em>…', memberDialogGuitar:'On <em>guitar</em>…', memberDialogKeys:'On <em>keyboards</em>…', memberDialogDrums:'On <em>drums</em>…' });
+Object.assign(translations.it, { memberContinuation:'…con', memberDialogVocals:'Alle <em>voci</em>…', memberDialogBass:'Al <em>basso</em>…', memberDialogGuitar:'Alla <em>chitarra</em>…', memberDialogKeys:'Alle <em>tastiere</em>…', memberDialogDrums:'Alla <em>batteria</em>…' });
+Object.assign(translations.fr, { memberContinuation:'…avec', memberDialogVocals:'Aux <em>voix</em>…', memberDialogBass:'À la <em>basse</em>…', memberDialogGuitar:'À la <em>guitare</em>…', memberDialogKeys:'Aux <em>claviers</em>…', memberDialogDrums:'À la <em>batterie</em>…' });
+Object.assign(translations.es, { countdownSoundOff:'Silenciar música', countdownSoundOn:'Activar música' });
+Object.assign(translations.ca, { countdownSoundOff:'Silenciar la música', countdownSoundOn:'Activar la música' });
+Object.assign(translations.en, { countdownSoundOff:'Mute music', countdownSoundOn:'Turn music on' });
+Object.assign(translations.it, { countdownSoundOff:'Disattiva la musica', countdownSoundOn:'Attiva la musica' });
+Object.assign(translations.fr, { countdownSoundOff:'Couper la musique', countdownSoundOn:'Activer la musique' });
 
 Object.assign(translations.es, { rightsReserved:'Todos los derechos reservados', collaboration:'Con la colaboración de' });
 Object.assign(translations.ca, { rightsReserved:'Tots els drets reservats', collaboration:'Amb la col·laboració de' });
 Object.assign(translations.en, { rightsReserved:'All rights reserved', collaboration:'In collaboration with' });
 Object.assign(translations.it, { rightsReserved:'Tutti i diritti riservati', collaboration:'In collaborazione con' });
 Object.assign(translations.fr, { rightsReserved:'Tous droits réservés', collaboration:'En collaboration avec' });
+Object.assign(translations.es, { musicPrevious:'Canción anterior', musicPlay:'Reproducir música', musicPause:'Pausar música', musicNext:'Siguiente canción', musicMute:'Silenciar música', musicUnmute:'Activar sonido' });
+Object.assign(translations.ca, { musicPrevious:'Cançó anterior', musicPlay:'Reprodueix música', musicPause:'Pausa la música', musicNext:'Cançó següent', musicMute:'Silencia la música', musicUnmute:'Activa el so' });
+Object.assign(translations.en, { musicPrevious:'Previous song', musicPlay:'Play music', musicPause:'Pause music', musicNext:'Next song', musicMute:'Mute music', musicUnmute:'Turn sound on' });
+Object.assign(translations.it, { musicPrevious:'Brano precedente', musicPlay:'Riproduci musica', musicPause:'Metti in pausa', musicNext:'Brano successivo', musicMute:'Disattiva la musica', musicUnmute:'Attiva il suono' });
+Object.assign(translations.fr, { musicPrevious:'Chanson précédente', musicPlay:'Lancer la musique', musicPause:'Mettre en pause', musicNext:'Chanson suivante', musicMute:'Couper la musique', musicUnmute:'Activer le son' });
 Object.assign(translations.es, { bcnIntro:'En este camino contamos con la colaboración de <strong class="bcn-highlight">BCN Fusió</strong>, que nos acompaña y nos ayuda a seguir creciendo como banda.' });
 Object.assign(translations.ca, { bcnIntro:'En aquest camí comptem amb la col·laboració de <strong class="bcn-highlight">BCN Fusió</strong>, que ens acompanya i ens ajuda a continuar creixent com a banda.' });
 Object.assign(translations.en, { bcnIntro:'Along the way, we have the support of <strong class="bcn-highlight">BCN Fusió</strong>, who are helping us continue to grow as a band.' });
@@ -358,13 +854,347 @@ if (!siteFooter) {
   siteFooter.innerHTML = '<a class="brand" href="#inicio" data-route="home">THE NAVIES<span>.</span></a><p class="footer-copyright">© <span class="footer-year"></span> The Navies<span data-i18n="rightsReserved">Todos los derechos reservados</span></p><p class="footer-credit"><span data-i18n="collaboration">Con la colaboración de</span> <a href="https://bcnfusio.cat" target="_blank" rel="noopener">BCN Fusió ↗</a></p>';
   document.body.append(siteFooter);
 }
+const footerQuickPlayer = document.querySelector('.footer-quick-player');
+const footerJump = footerQuickPlayer.querySelector('.footer-jump');
+const footerQuickMenu = footerQuickPlayer.querySelector('.footer-quick-menu');
+const footerQuickTrack = footerQuickPlayer.querySelector('.footer-quick-track');
+footerQuickMenu.inert = true;
+footerQuickPlayer.addEventListener('animationend', () => footerQuickPlayer.classList.remove('quick-route-entering'), { once:true });
+window.setTimeout(() => footerQuickPlayer.classList.remove('quick-route-entering'), 900);
+let footerQuickCloseTimer = null;
+let footerQuickTrackTimer = null;
+function showFooterQuickTrack() {
+  if (siteMusicIndex < 0) return;
+  const track = countdownTracks[siteMusicIndex];
+  footerQuickTrack.textContent = `${track.artist} — ${track.title}`;
+  window.clearTimeout(footerQuickTrackTimer);
+  footerQuickTrack.classList.remove('is-visible');
+  footerQuickPlayer.classList.remove('track-visible');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    footerQuickPlayer.classList.add('track-visible');
+    footerQuickTrack.classList.add('is-visible');
+    footerQuickTrackTimer = window.setTimeout(() => {
+      footerQuickTrack.classList.remove('is-visible');
+      footerQuickPlayer.classList.remove('track-visible');
+    }, 4000);
+  }));
+}
+function setFooterQuickOpen(open) {
+  window.clearTimeout(footerQuickCloseTimer);
+  footerQuickPlayer.classList.toggle('is-open', open);
+  footerQuickMenu.inert = !open;
+  footerJump.setAttribute('aria-expanded', String(open));
+  footerJump.setAttribute('aria-label', open ? 'Ir al reproductor y al pie de página' : 'Abrir controles de música');
+}
+footerQuickPlayer.addEventListener('mouseenter', () => {
+  if (window.matchMedia('(hover:hover) and (pointer:fine)').matches) setFooterQuickOpen(true);
+});
+footerQuickPlayer.addEventListener('mouseleave', () => {
+  if (!window.matchMedia('(hover:hover) and (pointer:fine)').matches) return;
+  footerQuickCloseTimer = window.setTimeout(() => setFooterQuickOpen(false), 160);
+});
+document.addEventListener('pointerdown', (event) => {
+  if (!window.matchMedia('(hover:none), (pointer:coarse)').matches) return;
+  if (!footerQuickPlayer.classList.contains('is-open') || footerQuickPlayer.contains(event.target)) return;
+  setFooterQuickOpen(false);
+});
+footerJump.addEventListener('click', () => {
+  const isOpen = footerQuickPlayer.classList.contains('is-open');
+  if (!isOpen) {
+    setFooterQuickOpen(true);
+    return;
+  }
+  setFooterQuickOpen(false);
+  siteFooter.scrollIntoView({ behavior:window.matchMedia('(prefers-reduced-motion:reduce)').matches ? 'auto' : 'smooth', block:'end' });
+});
 const seasonControl = document.createElement('div');
 seasonControl.className = 'season-control';
 seasonControl.innerHTML = `
+  <div class="site-music-player" aria-label="The Navies music player">
+    <div class="site-music-controls">
+      <button type="button" class="site-music-button" data-music-action="previous" data-i18n-aria="musicPrevious" aria-label="Canción anterior">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 7-7 5 7 5V7Zm7 0-7 5 7 5V7Z"/></svg>
+      </button>
+      <button type="button" class="site-music-button site-music-play" data-music-action="toggle" data-i18n-aria="musicPlay" aria-label="Reproducir música">
+        <svg class="music-play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7V5Z"/></svg>
+        <svg class="music-pause-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>
+      </button>
+      <button type="button" class="site-music-button" data-music-action="next" data-i18n-aria="musicNext" aria-label="Siguiente canción">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 7 7 5-7 5V7ZM5 7l7 5-7 5V7Z"/></svg>
+      </button>
+    </div>
+    <div class="site-music-main">
+      <span class="site-music-track-viewport"><span class="site-music-track" aria-live="polite">The Navies</span></span>
+      <input class="site-music-progress" type="range" min="0" max="1000" value="0" aria-label="Posición de la canción">
+    </div>
+    <button type="button" class="site-music-button site-music-mute" data-music-action="mute" data-i18n-aria="musicMute" aria-label="Silenciar música">
+      <svg class="music-sound-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h4l5 4V6l-5 4H4Z"/><path class="music-wave" d="M16 9.2a4 4 0 0 1 0 5.6M18.5 6.8a7.3 7.3 0 0 1 0 10.4"/></svg>
+      <svg class="music-muted-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10v4h4l5 4V6l-5 4H4Z"/><path class="music-slash" d="m16 9 5 5m0-5-5 5"/></svg>
+    </button>
+    <audio class="site-music-audio" preload="metadata" playsinline></audio>
+  </div>
   <div class="season-options" role="group" aria-label="Tema estacional">
     ${Object.entries(seasonThemes).map(([season, theme]) => `<button class="season-option" type="button" data-season="${season}" aria-pressed="false"><span class="season-icon" aria-hidden="true">${theme.icon}</span><span data-i18n="${season}">${season}</span></button>`).join('')}
   </div>`;
 siteFooter.prepend(seasonControl);
+
+const siteMusicAudio = seasonControl.querySelector('.site-music-audio');
+const siteMusicTrack = seasonControl.querySelector('.site-music-track');
+const siteMusicTrackViewport = seasonControl.querySelector('.site-music-track-viewport');
+const siteMusicToggle = seasonControl.querySelector('[data-music-action="toggle"]');
+const siteMusicMute = seasonControl.querySelector('[data-music-action="mute"]');
+const siteMusicProgress = seasonControl.querySelector('.site-music-progress');
+const footerQuickToggle = footerQuickPlayer.querySelector('.footer-quick-toggle');
+const footerQuickNext = footerQuickPlayer.querySelector('.footer-quick-next');
+function updateSiteMusicMarquee() {
+  siteMusicTrack.classList.remove('is-scrolling');
+  siteMusicTrack.style.removeProperty('--track-shift');
+  siteMusicTrack.style.removeProperty('--track-duration');
+  requestAnimationFrame(() => {
+    const overflow = Math.ceil(siteMusicTrack.scrollWidth - siteMusicTrackViewport.clientWidth);
+    if (overflow <= 2) return;
+    siteMusicTrack.style.setProperty('--track-shift', `${overflow}px`);
+    siteMusicTrack.style.setProperty('--track-duration', `${Math.max(8, Math.min(15, 7 + overflow / 24))}s`);
+    siteMusicTrack.classList.add('is-scrolling');
+  });
+}
+window.addEventListener('resize', updateSiteMusicMarquee, { passive:true });
+new IntersectionObserver(([entry]) => {
+  footerQuickPlayer.classList.toggle('is-hidden', entry.isIntersecting);
+  if (entry.isIntersecting) {
+    setFooterQuickOpen(false);
+  }
+}, { threshold:.08 }).observe(seasonControl.querySelector('.site-music-player'));
+let siteMusicIndex = -1;
+let siteMusicQueue = shuffledTrackIndexes();
+let siteMusicHistory = [];
+let siteMusicFadeFrame = null;
+let siteMusicEndFadeStarted = false;
+
+function siteMusicSource(index) {
+  const prefix = window.__naviesForcedLanguage ? '../' : '';
+  return `${prefix}audios/${countdownTracks[index].file}.mp3`;
+}
+
+function updateSiteMusicUI() {
+  const copy = translations[currentLanguage] || translations.es;
+  const playing = siteMusicIndex >= 0 && !siteMusicAudio.paused;
+  siteMusicToggle.classList.toggle('is-playing', playing);
+  footerQuickToggle.classList.toggle('is-playing', playing);
+  siteMusicToggle.setAttribute('aria-label', playing ? copy.musicPause : copy.musicPlay);
+  footerQuickToggle.setAttribute('aria-label', playing ? copy.musicPause : copy.musicPlay);
+  footerQuickNext.setAttribute('aria-label', copy.musicNext);
+  const musicMuted = isAudioMuted(siteMusicAudio);
+  siteMusicMute.classList.toggle('is-muted', musicMuted);
+  siteMusicMute.setAttribute('aria-label', musicMuted ? copy.musicUnmute : copy.musicMute);
+  if (siteMusicIndex >= 0) {
+    const track = countdownTracks[siteMusicIndex];
+    siteMusicTrack.textContent = `${track.artist} — ${track.title}`;
+    updateSiteMusicMarquee();
+  }
+}
+
+function nextSiteMusicIndex() {
+  if (!siteMusicQueue.length) siteMusicQueue = shuffledTrackIndexes(siteMusicIndex);
+  return siteMusicQueue.shift();
+}
+
+function fadeSiteMusicOut(onComplete, duration = 2000) {
+  if (siteMusicFadeFrame !== null) cancelAnimationFrame(siteMusicFadeFrame);
+  const initialVolume = getAudioLevel(siteMusicAudio);
+  const startedAt = performance.now();
+  const animate = (now) => {
+    const progress = Math.min(1, (now - startedAt) / duration);
+    setAudioLevel(siteMusicAudio, initialVolume * (1 - (progress * progress * (3 - (2 * progress)))));
+    if (progress < 1) siteMusicFadeFrame = requestAnimationFrame(animate);
+    else {
+      siteMusicFadeFrame = null;
+      onComplete();
+    }
+  };
+  siteMusicFadeFrame = requestAnimationFrame(animate);
+}
+
+function fadeSiteMusicIn(duration = 2000) {
+  if (siteMusicFadeFrame !== null) cancelAnimationFrame(siteMusicFadeFrame);
+  const startedAt = performance.now();
+  const animate = (now) => {
+    const progress = Math.min(1, (now - startedAt) / duration);
+    const eased = progress * progress * (3 - (2 * progress));
+    setAudioLevel(siteMusicAudio, .34 * eased);
+    if (progress < 1) siteMusicFadeFrame = requestAnimationFrame(animate);
+    else siteMusicFadeFrame = null;
+  };
+  siteMusicFadeFrame = requestAnimationFrame(animate);
+}
+
+let siteMusicInterruptedByNavyAudio = false;
+window.naviesPauseSiteMusicForNavyAudio = function naviesPauseSiteMusicForNavyAudio() {
+  if (siteMusicIndex < 0 || siteMusicAudio.paused || siteMusicInterruptedByNavyAudio) return;
+  siteMusicInterruptedByNavyAudio = true;
+  fadeSiteMusicOut(() => {
+    siteMusicAudio.pause();
+    updateSiteMusicUI();
+  }, 650);
+};
+
+window.naviesResumeSiteMusicAfterNavyAudio = function naviesResumeSiteMusicAfterNavyAudio() {
+  if (!siteMusicInterruptedByNavyAudio || siteMusicIndex < 0) return;
+  siteMusicInterruptedByNavyAudio = false;
+  ensureAudioGain(siteMusicAudio);
+  resumeNaviesAudio();
+  setAudioLevel(siteMusicAudio, 0);
+  siteMusicAudio.play().then(() => {
+    fadeSiteMusicIn(750);
+    showFooterQuickTrack();
+    updateSiteMusicUI();
+  }).catch(() => {
+    setAudioLevel(siteMusicAudio, .34);
+    updateSiteMusicUI();
+  });
+};
+
+async function playSiteMusic(index, rememberCurrent = true) {
+  if (siteMusicFadeFrame !== null) cancelAnimationFrame(siteMusicFadeFrame);
+  ensureAudioGain(siteMusicAudio);
+  resumeNaviesAudio();
+  if (rememberCurrent && siteMusicIndex >= 0 && siteMusicIndex !== index) siteMusicHistory.push(siteMusicIndex);
+  siteMusicIndex = index;
+  siteMusicEndFadeStarted = false;
+  const fadeFromStart = countdownTracks[index].file === 'have-you-ever-seen-the-rain';
+  setAudioLevel(siteMusicAudio, fadeFromStart ? 0 : .34);
+  siteMusicProgress.value = '0';
+  siteMusicProgress.style.setProperty('--music-progress', '0%');
+  siteMusicAudio.src = siteMusicSource(index);
+  siteMusicAudio.load();
+  updateSiteMusicUI();
+  try {
+    await siteMusicAudio.play();
+    if (fadeFromStart) fadeSiteMusicIn();
+    showFooterQuickTrack();
+  } catch (error) {}
+  updateSiteMusicUI();
+}
+
+function prepareSiteMusicFromCountdown(index) {
+  if (index < 0 || index >= countdownTracks.length) return;
+  if (siteMusicFadeFrame !== null) cancelAnimationFrame(siteMusicFadeFrame);
+  siteMusicAudio.pause();
+  siteMusicIndex = index;
+  siteMusicEndFadeStarted = false;
+  siteMusicQueue = siteMusicQueue.filter((trackIndex) => trackIndex !== index);
+  const fadeFromStart = countdownTracks[index].file === 'have-you-ever-seen-the-rain';
+  setAudioLevel(siteMusicAudio, fadeFromStart ? 0 : .34);
+  setAudioMuted(siteMusicAudio, false);
+  siteMusicProgress.value = '0';
+  siteMusicProgress.style.setProperty('--music-progress', '0%');
+  siteMusicAudio.src = siteMusicSource(index);
+  siteMusicAudio.load();
+  updateSiteMusicUI();
+}
+
+function playNextSiteMusic() {
+  playSiteMusic(nextSiteMusicIndex());
+}
+
+function playPreviousSiteMusic() {
+  if (siteMusicIndex >= 0 && siteMusicAudio.currentTime > 5) {
+    playSiteMusic(siteMusicIndex, false);
+    return;
+  }
+  if (!siteMusicHistory.length) {
+    if (siteMusicIndex >= 0) playSiteMusic(siteMusicIndex, false);
+    return;
+  }
+  const previousIndex = siteMusicHistory.pop();
+  if (siteMusicIndex >= 0) siteMusicQueue.unshift(siteMusicIndex);
+  playSiteMusic(previousIndex, false);
+}
+
+seasonControl.querySelector('[data-music-action="previous"]').addEventListener('click', playPreviousSiteMusic);
+seasonControl.querySelector('[data-music-action="next"]').addEventListener('click', playNextSiteMusic);
+footerQuickNext.addEventListener('click', playNextSiteMusic);
+siteMusicMute.addEventListener('click', () => {
+  setAudioMuted(siteMusicAudio, !isAudioMuted(siteMusicAudio));
+  updateSiteMusicUI();
+});
+siteMusicProgress.addEventListener('input', () => {
+  if (!Number.isFinite(siteMusicAudio.duration) || siteMusicAudio.duration <= 0) return;
+  if (siteMusicFadeFrame !== null) cancelAnimationFrame(siteMusicFadeFrame);
+  siteMusicFadeFrame = null;
+  siteMusicEndFadeStarted = false;
+  setAudioLevel(siteMusicAudio, .34);
+  siteMusicAudio.currentTime = (Number(siteMusicProgress.value) / 1000) * siteMusicAudio.duration;
+});
+function toggleSiteMusicPlayback() {
+  const reclaimedFromNavyAudio = window.naviesStopNavyAudioForSiteMusic?.() === true;
+  if (reclaimedFromNavyAudio) {
+    siteMusicInterruptedByNavyAudio = false;
+    if (siteMusicFadeFrame !== null) cancelAnimationFrame(siteMusicFadeFrame);
+    siteMusicFadeFrame = null;
+    if (siteMusicIndex < 0) {
+      playNextSiteMusic();
+      return;
+    }
+    ensureAudioGain(siteMusicAudio);
+    resumeNaviesAudio();
+    setAudioLevel(siteMusicAudio, 0);
+    siteMusicAudio.play().then(() => {
+      fadeSiteMusicIn(750);
+      showFooterQuickTrack();
+      updateSiteMusicUI();
+    }).catch(() => {
+      setAudioLevel(siteMusicAudio, .34);
+      updateSiteMusicUI();
+    });
+    return;
+  }
+  if (siteMusicIndex < 0) {
+    ensureAudioGain(siteMusicAudio);
+    resumeNaviesAudio();
+    playNextSiteMusic();
+    return;
+  }
+  ensureAudioGain(siteMusicAudio);
+  resumeNaviesAudio();
+  if (siteMusicAudio.paused) {
+    const shouldFadeFromStart = siteMusicIndex >= 0
+      && countdownTracks[siteMusicIndex].file === 'have-you-ever-seen-the-rain'
+      && siteMusicAudio.currentTime < .35;
+    if (shouldFadeFromStart) setAudioLevel(siteMusicAudio, 0);
+    siteMusicAudio.play().then(() => {
+      if (shouldFadeFromStart) fadeSiteMusicIn();
+      showFooterQuickTrack();
+      updateSiteMusicUI();
+    }).catch(() => {});
+  }
+  else siteMusicAudio.pause();
+  updateSiteMusicUI();
+}
+siteMusicToggle.addEventListener('click', toggleSiteMusicPlayback);
+footerQuickToggle.addEventListener('click', toggleSiteMusicPlayback);
+siteMusicAudio.addEventListener('play', updateSiteMusicUI);
+siteMusicAudio.addEventListener('pause', updateSiteMusicUI);
+siteMusicAudio.addEventListener('timeupdate', () => {
+  if (siteMusicIndex < 0) return;
+  if (Number.isFinite(siteMusicAudio.duration) && siteMusicAudio.duration > 0) {
+    siteMusicProgress.value = String(Math.round((siteMusicAudio.currentTime / siteMusicAudio.duration) * 1000));
+    siteMusicProgress.style.setProperty('--music-progress', `${(siteMusicAudio.currentTime / siteMusicAudio.duration) * 100}%`);
+  }
+  const track = countdownTracks[siteMusicIndex];
+  const shouldFade = track.file === 'the-final-countdown' || track.file === 'have-you-ever-seen-the-rain';
+  const remaining = siteMusicAudio.duration - siteMusicAudio.currentTime;
+  if (shouldFade && Number.isFinite(remaining) && remaining <= 2.1 && remaining > 0 && !siteMusicEndFadeStarted) {
+    siteMusicEndFadeStarted = true;
+    fadeSiteMusicOut(() => {
+      siteMusicAudio.pause();
+      playNextSiteMusic();
+    });
+  }
+});
+siteMusicAudio.addEventListener('ended', () => {
+  if (!siteMusicEndFadeStarted) playNextSiteMusic();
+});
 
 function setSeason(season, persist = true) {
   const selected = seasonThemes[season] ? season : 'autumn';
@@ -436,6 +1266,7 @@ function setLanguage(language, persist = false) {
   document.documentElement.lang = language;
   document.querySelectorAll('[data-i18n]').forEach((element) => { if (copy[element.dataset.i18n]) element.textContent = copy[element.dataset.i18n]; });
   document.querySelectorAll('[data-i18n-html]').forEach((element) => { if (copy[element.dataset.i18nHtml]) element.innerHTML = copy[element.dataset.i18nHtml]; });
+  document.querySelectorAll('[data-i18n-aria]').forEach((element) => { if (copy[element.dataset.i18nAria]) element.setAttribute('aria-label', copy[element.dataset.i18nAria]); });
   const activeOption = languageOptions.find((option) => option.dataset.language === language) || languageOptions[0];
   languageTrigger.querySelector('.flag').className = `flag flag-${language}`;
   languageTrigger.querySelector('strong').textContent = activeOption.querySelector('small').textContent;
@@ -451,6 +1282,8 @@ function setLanguage(language, persist = false) {
     localStorage.setItem('the-navies-language-manual', '1');
   }
   if (document.documentElement.dataset.route === 'espacio-navy') document.title = localizedSpaceTitle;
+  setCountdownVolumeLabel();
+  updateSiteMusicUI();
   syncCalendar(language);
   if (document.querySelector('#account-dialog')) updateAccountUI();
 }
@@ -479,7 +1312,8 @@ languageOptions.forEach((option) => option.addEventListener('click', () => {
     localStorage.setItem('the-navies-language', selectedLanguage);
     localStorage.setItem('the-navies-language-manual', '1');
     sessionStorage.setItem('the-navies-internal-navigation', '1');
-    location.href = `../${selectedLanguage}/${location.hash || '#inicio'}`;
+    const destinationHash = document.documentElement.classList.contains('countdown-entry') ? '' : (location.hash || '#inicio');
+    location.href = `../${selectedLanguage}/${destinationHash}`;
     return;
   }
   setLanguage(selectedLanguage, true);
@@ -494,10 +1328,23 @@ const dialogName = document.querySelector('#dialog-name');
 const dialogBio = document.querySelector('#dialog-bio');
 const dialogSocial = document.querySelector('#dialog-social');
 const memberTitleKeys = { vocals:'visualVocals', bass:'visualBass', guitar:'visualGuitar', keys:'visualKeys', drums:'visualDrums' };
+const memberDialogTitleKeys = { vocals:'memberDialogVocals', bass:'memberDialogBass', guitar:'memberDialogGuitar', keys:'memberDialogKeys', drums:'memberDialogDrums' };
+const memberDisplayNames = { keys:'Pau Fermosel', drums:'Pau Escobedo' };
 function openMember(member) {
   const profile = (memberBios[currentLanguage] || memberBios.es)[member];
-  dialogName.textContent = (translations[currentLanguage] || translations.es)[memberTitleKeys[member]];
-  dialogBio.textContent = profile[1];
+  const copy = translations[currentLanguage] || translations.es;
+  if (memberDialogTitleKeys[member]) dialogName.innerHTML = copy[memberDialogTitleKeys[member]];
+  else dialogName.textContent = copy[memberTitleKeys[member]];
+  dialogBio.replaceChildren();
+  if (memberDisplayNames[member]) {
+    const highlightedName = document.createElement('strong');
+    highlightedName.className = 'dialog-person-name';
+    highlightedName.textContent = memberDisplayNames[member];
+    const biography = profile[1].charAt(0).toLocaleLowerCase(currentLanguage) + profile[1].slice(1);
+    dialogBio.append(document.createTextNode('…'), highlightedName, document.createTextNode(` ${biography}`));
+  } else {
+    dialogBio.textContent = `…${profile[1].charAt(0).toLocaleLowerCase(currentLanguage)}${profile[1].slice(1)}`;
+  }
   dialogSocial.hidden = member !== 'drums';
   memberDialog.showModal();
 }

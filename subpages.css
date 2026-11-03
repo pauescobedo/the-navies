@@ -82,6 +82,14 @@
 .event-item.is-today time { display:grid; align-content:center; gap:4px; }
 .event-item.is-today time strong { font-size:16px; letter-spacing:-.035em; }
 .event-item.is-today time small { font-size:9px; line-height:1; text-transform:uppercase; letter-spacing:.04em; }
+.calendar-useful-links { margin-top:28px; padding-top:26px; border-top:1px solid var(--line); }
+.calendar-useful-links h4 { margin:0 0 18px; font:600 16px/1.2 "Manrope",sans-serif; letter-spacing:-.025em; }
+.useful-links-list { border-top:1px solid var(--line); display:grid; }
+.useful-links-list a { min-height:49px; padding:0 2px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; gap:18px; color:var(--ink); transition:color .2s ease,padding .22s ease; }
+.useful-links-list a:hover { padding-left:5px; color:var(--accent-disc); }
+.useful-links-list b { font:600 13px/1.25 "Manrope",sans-serif; }
+.useful-links-list i { flex:0 0 auto; color:currentColor; font-size:14px; font-style:normal; transition:transform .22s ease; }
+.useful-links-list a:hover i { transform:translate(3px,-3px); }
 
 @media (max-width:900px) {
   .subpage { padding-top:76px; }.subpage .site-header nav,.subpage > nav { color:var(--ink-deep); }.media-page .site-header nav,.media-page > nav { color:white; background:radial-gradient(ellipse 44% 30% at 8% 18%,color-mix(in srgb,var(--accent) 20%,transparent),transparent 72%),radial-gradient(ellipse 42% 34% at 94% 78%,color-mix(in srgb,var(--accent) 17%,transparent),transparent 74%),#091b2a; }

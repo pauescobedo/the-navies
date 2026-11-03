@@ -9,6 +9,7 @@
   <meta name="googlebot" content="notranslate">
   <meta property="og:site_name" content="The Navies">
   <meta property="og:title" content="The Navies">
+  <meta property="og:type" content="website">
   <meta property="og:image" content="https://thenavies.com/icons/pwa-512.png">
   <meta property="og:locale" content="es_ES">
   <meta name="twitter:title" content="The Navies">
@@ -17,7 +18,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <meta name="navies-build" content="20261026-80">
+  <meta name="navies-build" content="20261103-150">
   <title>The Navies</title>
   <link rel="canonical" href="https://thenavies.com/es/">
   <link rel="alternate" hreflang="x-default" href="https://thenavies.com/">
@@ -64,21 +65,81 @@
     "publisher": { "@id": "https://thenavies.com/#music-group" }
   }
   </script>
-  <style>html:not(.nav-ready) #main-nav>a::after{opacity:0!important}@media(max-width:900px){html:not(.nav-ready) #main-nav{display:none!important}}</style>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "@id": "https://thenavies.com/es/#webpage",
+    "url": "https://thenavies.com/es/",
+    "name": "The Navies",
+    "headline": "The Navies",
+    "isPartOf": { "@id": "https://thenavies.com/#website" },
+    "about": { "@id": "https://thenavies.com/#music-group" },
+    "primaryImageOfPage": { "@id": "https://thenavies.com/icons/pwa-512.png" }
+  }
+  </script>
+  <style>html:not(.nav-ready) #main-nav>a::after{opacity:0!important}html.countdown-entry,html.countdown-entry body{background:#17304a!important}html.countdown-entry .countdown-landing{position:fixed;inset:0;background:#17304a}html.countdown-entry.countdown-entering .countdown-landing>*{visibility:hidden}@media(max-width:900px){html:not(.nav-ready) #main-nav{display:none!important}}</style>
   <script>if('scrollRestoration'in history)history.scrollRestoration='manual'</script>
+  <script>try{const n=performance.getEntriesByType('navigation')[0],r=n&&n.type==='reload',c=!location.hash||location.hash==='#countdown',i=sessionStorage.getItem('the-navies-internal-navigation')==='1',v=sessionStorage.getItem('the-navies-countdown-revealed')==='1';if(c){document.documentElement.classList.add('countdown-entry');if(r||!(i&&v))document.documentElement.classList.add('countdown-welcome','countdown-entering','countdown-preloading')}}catch(e){}</script>
   <script>try{const b=document.querySelector('meta[name="navies-build"]').content;fetch(`${location.pathname}?comprobar=${Date.now()}`,{cache:'no-store'}).then(r=>r.text()).then(h=>{const n=h.match(/<meta name="navies-build" content="([^"]+)"/)?.[1];if(n&&n!==b){const u=new URL(location.href);u.searchParams.set('version',n);location.replace(u)}}).catch(()=>{})}catch(e){}</script>
   <script>try{const c={spring:'#F4A7C1',summer:'#FFD76A',autumn:'#C77B52',winter:'#A8DADC'},n=performance.getEntriesByType('navigation')[0],i=sessionStorage.getItem('the-navies-internal-navigation')==='1',k=i||(n&&n.type==='back_forward');sessionStorage.removeItem('the-navies-internal-navigation');if(!k)localStorage.removeItem('the-navies-season');const s=k&&localStorage.getItem('the-navies-season')||'autumn';window.__naviesInitialSeason=c[s]?s:'autumn';document.documentElement.dataset.season=window.__naviesInitialSeason;document.documentElement.style.setProperty('--accent',c[window.__naviesInitialSeason])}catch(e){document.documentElement.dataset.season='autumn'}</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="preload" href="../script.js?v=20261026-80" as="script">
-  <link rel="stylesheet" href="../styles.css?v=20261026-80">
-  <link rel="stylesheet" href="../subpages.css?v=20261026-80">
-  <script defer src="../script.js?v=20261026-80"></script>
-  <script defer src="../portal.js?v=20261026-80"></script>
+  <link rel="preload" href="../script.js?v=20261103-150" as="script">
+  <link rel="stylesheet" href="../styles.css?v=20261103-150">
+  <link rel="stylesheet" href="../subpages.css?v=20261103-150">
+  <script defer src="../script.js?v=20261103-150"></script>
+  <script defer src="../portal.js?v=20261103-150"></script>
 </head>
 <body>
   <div class="noise" aria-hidden="true"></div>
+  <div class="footer-quick-player quick-route-entering">
+    <button class="footer-jump" type="button" aria-label="Abrir controles de música" aria-expanded="false"><svg class="footer-music-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="5" width="2.3" height="11" rx="1"/><rect x="17" y="3" width="2.3" height="11" rx="1"/><path d="M9 5 19 3v3L9 8Z"/><circle cx="6.8" cy="16.8" r="2.8"/><circle cx="15.8" cy="14.8" r="2.8"/></svg><svg class="footer-down-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+    <div class="footer-quick-menu"><button type="button" class="footer-quick-button footer-quick-toggle" aria-label="Reproducir música"><svg class="quick-play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m8 5 11 7-11 7V5Z"/></svg><svg class="quick-pause-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg></button><button type="button" class="footer-quick-button footer-quick-next" aria-label="Siguiente canción"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 7 7 5-7 5V7ZM5 7l7 5-7 5V7Z"/></svg></button></div>
+    <span class="footer-quick-track" aria-live="polite"></span>
+  </div>
+  <section class="countdown-landing" id="countdown-landing" aria-labelledby="countdown-title">
+    <div class="countdown-orb countdown-orb-one" aria-hidden="true"></div>
+    <div class="countdown-orb countdown-orb-two" aria-hidden="true"></div>
+    <div class="countdown-preloader" aria-hidden="true"><strong>THE NAVIES</strong><span><i></i></span></div>
+    <div class="countdown-welcome-panel" id="countdown-welcome">
+      <p class="countdown-welcome-eyebrow">THE NAVIES</p>
+      <h2 data-i18n="countdownWelcomeTitle">Algo está a punto de sonar</h2>
+      <p data-i18n="countdownWelcomeCopy">El 21 de noviembre, siete músicos y un escenario te esperan en Plaza Masadas. El resto, lo tendrás que descubrir en directo.</p>
+      <button class="countdown-start" id="countdown-start" type="button"><span data-i18n="countdownWelcomeStart">Descubrir</span><span aria-hidden="true">→</span></button>
+    </div>
+    <div class="countdown-content">
+      <p class="countdown-brand">THE NAVIES<span>.</span></p>
+      <p class="countdown-kicker"><i></i><span data-i18n="countdownKicker">Próximo concierto</span></p>
+      <h2 id="countdown-title" data-i18n="sagreraHomeName">Fiestas de La Sagrera</h2>
+      <div class="countdown-event-details">
+        <span><small data-i18n="countdownDateLabel">Fecha</small><strong data-i18n="countdownEventDate">21 DE NOVIEMBRE</strong></span>
+        <span><small data-i18n="countdownTimeLabel">Hora</small><strong data-i18n="countdownEventTime">13:00</strong></span>
+        <span><small data-i18n="countdownPlaceLabel">Lugar</small><strong data-i18n="countdownEventVenue">PLAZA MASADAS</strong></span>
+      </div>
+      <div class="countdown-clock" role="timer" aria-label="Cuenta atrás para el concierto">
+        <span><strong data-countdown-unit="days">00</strong><small data-i18n="countdownDays">Días</small></span>
+        <i>:</i>
+        <span><strong data-countdown-unit="hours">00</strong><small data-i18n="countdownHours">Horas</small></span>
+        <i>:</i>
+        <span><strong data-countdown-unit="minutes">00</strong><small data-i18n="countdownMinutes">Minutos</small></span>
+        <i>:</i>
+        <span><strong data-countdown-unit="seconds">00</strong><small data-i18n="countdownSeconds">Segundos</small></span>
+      </div>
+      <div class="countdown-actions">
+        <button class="countdown-enter" id="countdown-enter" type="button"><span data-i18n="countdownEnter">Ir a inicio</span><span>↗</span></button>
+      </div>
+    </div>
+      <button class="countdown-volume" id="countdown-volume" type="button" aria-pressed="false" aria-label="Silenciar música">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path class="speaker-body" d="M4 10v4h4l5 4V6l-5 4H4Z"></path>
+          <path class="sound-wave" d="M16 9.2a4 4 0 0 1 0 5.6M18.5 6.8a7.3 7.3 0 0 1 0 10.4"></path>
+          <path class="mute-slash" d="M5 5l14 14"></path>
+        </svg>
+      </button>
+      <audio id="countdown-audio" preload="auto" playsinline></audio>
+  </section>
   <header class="site-header">
     <div class="header-left">
       <div class="language-picker" id="language-picker">
@@ -133,7 +194,6 @@
         <div class="floating-note">PLAY IT<br><strong>LOUD</strong></div>
       </div>
 
-      <div class="scroll-cue" aria-hidden="true">SCROLL <span></span></div>
     </section>
 
     <section class="next-show section-pad" id="directo">
@@ -187,8 +247,8 @@
         <article class="member reveal" role="button" tabindex="0" data-member="vocals"><div class="avatar"><span class="instrument-word" data-i18n="visualVocals">Voces</span></div><div><h3 data-i18n="groupVocals">Tres cantantes</h3><p data-i18n="groupVocalsCopy">Tres voces para melodías, armonías y coros.</p></div></article>
         <article class="member reveal" role="button" tabindex="0" data-member="bass"><div class="avatar alt"><span class="instrument-word" data-i18n="visualBass">Bajo</span></div><div><h3 data-i18n="groupBass">Una bajista</h3><p data-i18n="groupBassCopy">La base grave que une ritmo y armonía.</p></div></article>
         <article class="member reveal" role="button" tabindex="0" data-member="guitar"><div class="avatar warm"><span class="instrument-word" data-i18n="visualGuitar">Guitarra</span></div><div><h3 data-i18n="groupGuitar">Un guitarrista</h3><p data-i18n="groupGuitarCopy">Riffs, acordes y el carácter rock del grupo.</p></div></article>
-        <article class="member reveal" role="button" tabindex="0" data-member="keys"><div class="avatar pale"><span class="instrument-word" data-i18n="visualKeys">Teclados</span></div><div><h3 data-i18n="groupKeys">Un teclista</h3><p data-i18n="groupKeysCopy">Pianos, sintetizadores y capas de sonido.</p></div></article>
-        <article class="member reveal" role="button" tabindex="0" data-member="drums"><div class="avatar"><span class="instrument-word" data-i18n="visualDrums">Batería</span></div><div><h3 data-i18n="groupDrums">Un batería</h3><p data-i18n="groupDrumsCopy">El pulso que sostiene y empuja todo el directo.</p></div></article>
+        <article class="member reveal" role="button" tabindex="0" data-member="keys"><div class="avatar pale"><span class="instrument-word" data-i18n="visualKeys">Teclados</span></div><div><h3 data-i18n="groupKeys">Pau Fermosel</h3><p data-i18n="groupKeysCopy">Pianos, sintetizadores y capas de sonido.</p></div></article>
+        <article class="member reveal" role="button" tabindex="0" data-member="drums"><div class="avatar"><span class="instrument-word" data-i18n="visualDrums">Batería</span></div><div><h3 data-i18n="groupDrums">Pau Escobedo</h3><p data-i18n="groupDrumsCopy">El pulso que sostiene y empuja todo el directo.</p></div></article>
       </div>
     </section>
 
@@ -274,6 +334,14 @@
             <div class="event-item"><time datetime="2026-11-13"><strong>13</strong><span>NOV</span></time><div><b data-i18n="rehearsal">Ensayo</b><small data-i18n="rehearsalTime">17:30h</small></div></div>
             <div class="event-item highlight"><time datetime="2026-11-20"><strong>20</strong><span>NOV</span></time><div><b data-i18n="dressRehearsal">Ensayo General</b><small data-i18n="rehearsalTime">17:30h</small></div></div>
             <div class="event-item concert"><time datetime="2026-11-21"><strong>21</strong><span>NOV</span></time><div><b data-i18n="sagreraFestName">Fiestas de La Sagrera 2026</b><small>13:00h · Plaza Masadas</small></div></div>
+          </div>
+          <div class="calendar-useful-links">
+          <h4 data-i18n="usefulLinks">Enlaces útiles</h4>
+          <div class="useful-links-list">
+            <a href="https://drive.google.com/drive/folders/1q_XGlt-PRw3ymWBn_mTIBS6Ul4XQuo0L?usp=drive_link" target="_blank" rel="noopener"><b>Google Drive</b><i aria-hidden="true">↗</i></a>
+            <a href="https://open.spotify.com" target="_blank" rel="noopener"><b>Spotify</b><i aria-hidden="true">↗</i></a>
+            <a href="https://music.apple.com" target="_blank" rel="noopener"><b>Apple Music</b><i aria-hidden="true">↗</i></a>
+          </div>
           </div>
         </article>
       </div>

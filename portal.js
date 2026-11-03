@@ -64,6 +64,19 @@ const audioDialog = document.querySelector('#audio-dialog');
 const audioPlayer = document.querySelector('#audio-player');
 const audioDialogTitle = document.querySelector('#audio-dialog-title');
 const audioDialogDownload = document.querySelector('#audio-dialog-download');
+let navyAudioYieldingToSiteMusic = false;
+audioPlayer.addEventListener('play', () => window.naviesPauseSiteMusicForNavyAudio?.());
+audioPlayer.addEventListener('pause', () => {
+  if (!navyAudioYieldingToSiteMusic) window.naviesResumeSiteMusicAfterNavyAudio?.();
+});
+audioPlayer.addEventListener('ended', () => window.naviesResumeSiteMusicAfterNavyAudio?.());
+window.naviesStopNavyAudioForSiteMusic = () => {
+  if (audioPlayer.paused) return false;
+  navyAudioYieldingToSiteMusic = true;
+  audioPlayer.pause();
+  window.setTimeout(() => { navyAudioYieldingToSiteMusic = false; }, 0);
+  return true;
+};
 document.querySelectorAll('.audio-open').forEach((button) => button.addEventListener('click', () => {
   audioDialogTitle.textContent = button.dataset.audioTitle;
   audioPlayer.src = button.dataset.audioSrc;
@@ -72,7 +85,9 @@ document.querySelectorAll('.audio-open').forEach((button) => button.addEventList
   audioDialog.showModal();
 }));
 function closeAudioDialog() {
+  navyAudioYieldingToSiteMusic = false;
   audioPlayer.pause();
+  window.naviesResumeSiteMusicAfterNavyAudio?.();
   audioPlayer.removeAttribute('src');
   audioPlayer.load();
   audioDialog.close();
