@@ -805,6 +805,11 @@ Object.assign(translations.ca, { visualVocals:'Veus', visualBass:'Baix', visualG
 Object.assign(translations.en, { visualVocals:'Vocals', visualBass:'Bass', visualGuitar:'Guitar', visualKeys:'Keyboards', visualDrums:'Drums', sessionActive:'Signed in', sessionClosed:'Signed out' });
 Object.assign(translations.it, { visualVocals:'Voci', visualBass:'Basso', visualGuitar:'Chitarra', visualKeys:'Tastiere', visualDrums:'Batteria', sessionActive:'Accesso effettuato', sessionClosed:'Sessione chiusa' });
 Object.assign(translations.fr, { visualVocals:'Voix', visualBass:'Basse', visualGuitar:'Guitare', visualKeys:'Claviers', visualDrums:'Batterie', sessionActive:'Session ouverte', sessionClosed:'Session fermée' });
+Object.assign(translations.es, { adminAccess:'Acceder a administración' });
+Object.assign(translations.ca, { adminAccess:'Accedir a administració' });
+Object.assign(translations.en, { adminAccess:'Access administration' });
+Object.assign(translations.it, { adminAccess:'Accedi all’amministrazione' });
+Object.assign(translations.fr, { adminAccess:'Accéder à l’administration' });
 Object.assign(translations.es, { groupVocals:'Tres cantantes', groupVocalsCopy:'Tres voces para melodías, armonías y coros.', groupBass:'Una bajista', groupBassCopy:'La base grave que une ritmo y armonía.', groupGuitar:'Un guitarrista', groupGuitarCopy:'Riffs, acordes y el carácter rock del grupo.', groupKeys:'Pau Fermosel', groupKeysCopy:'Pianos, sintetizadores y capas que amplían el sonido.', groupDrums:'Pau Escobedo', groupDrumsCopy:'El pulso que mueve la energía y mantiene unida a la banda.', provisionalBio:'Así se completa el sonido de The Navies.' });
 Object.assign(translations.ca, { groupVocals:'Tres cantants', groupVocalsCopy:'Tres veus per a melodies, harmonies i cors.', groupBass:'Una baixista', groupBassCopy:'La base greu que uneix ritme i harmonia.', groupGuitar:'Un guitarrista', groupGuitarCopy:'Riffs, acords i el caràcter rock del grup.', groupKeys:'Pau Fermosel', groupKeysCopy:'Pianos, sintetitzadors i capes que amplien el so.', groupDrums:'Pau Escobedo', groupDrumsCopy:'El pols que mou l’energia i manté unida la banda.', provisionalBio:'Així es completa el so de The Navies.' });
 Object.assign(translations.en, { groupVocals:'Three singers', groupVocalsCopy:'Three voices for melodies, harmonies and choruses.', groupBass:'One bassist', groupBassCopy:'The low-end foundation connecting rhythm and harmony.', groupGuitar:'One guitarist', groupGuitarCopy:'Riffs, chords and the band’s rock character.', groupKeys:'Pau Fermosel', groupKeysCopy:'Piano, synthesisers and layers that expand the sound.', groupDrums:'Pau Escobedo', groupDrumsCopy:'The pulse that drives the energy and holds the band together.', provisionalBio:'This is how The Navies completes its sound.' });
@@ -1207,6 +1212,7 @@ function setSeason(season, persist = true) {
   document.querySelectorAll('.season-option').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.season === selected)));
   if (persist) localStorage.setItem('the-navies-season', selected);
 }
+window.naviesSetSeason = setSeason;
 setSeason(window.__naviesInitialSeason || localStorage.getItem('the-navies-season') || 'autumn', false);
 requestAnimationFrame(() => document.documentElement.classList.add('theme-ready'));
 seasonControl.querySelectorAll('.season-option').forEach((button) => button.addEventListener('click', () => setSeason(button.dataset.season)));
@@ -1332,24 +1338,77 @@ const dialogName = document.querySelector('#dialog-name');
 const dialogBio = document.querySelector('#dialog-bio');
 const dialogSocial = document.querySelector('#dialog-social');
 const memberTitleKeys = { vocals:'visualVocals', bass:'visualBass', guitar:'visualGuitar', keys:'visualKeys', drums:'visualDrums' };
-const memberDialogTitleKeys = { vocals:'memberDialogVocals', bass:'memberDialogBass', guitar:'memberDialogGuitar', keys:'memberDialogKeys', drums:'memberDialogDrums' };
-const memberDisplayNames = { keys:'Pau Fermosel', drums:'Pau Escobedo' };
-function openMember(member) {
-  const profile = (memberBios[currentLanguage] || memberBios.es)[member];
-  const copy = translations[currentLanguage] || translations.es;
-  if (memberDialogTitleKeys[member]) dialogName.innerHTML = copy[memberDialogTitleKeys[member]];
-  else dialogName.textContent = copy[memberTitleKeys[member]];
-  dialogBio.replaceChildren();
-  if (memberDisplayNames[member]) {
-    const highlightedName = document.createElement('strong');
-    highlightedName.className = 'dialog-person-name';
-    highlightedName.textContent = memberDisplayNames[member];
-    const biography = profile[1].charAt(0).toLocaleLowerCase(currentLanguage) + profile[1].slice(1);
-    dialogBio.append(document.createTextNode('…'), highlightedName, document.createTextNode(` ${biography}`));
-  } else {
-    dialogBio.textContent = `…${profile[1].charAt(0).toLocaleLowerCase(currentLanguage)}${profile[1].slice(1)}`;
+const memberDisplayNames = {
+  es:{ vocals:'Aina, Candela y Mariona', bass:'Emma', guitar:'Carles', keys:'Pau Fermosel', drums:'Pau Escobedo' },
+  ca:{ vocals:'Aina, Candela i Mariona', bass:'Emma', guitar:'Carles', keys:'Pau Fermosel', drums:'Pau Escobedo' },
+  en:{ vocals:'Aina, Candela and Mariona', bass:'Emma', guitar:'Carles', keys:'Pau Fermosel', drums:'Pau Escobedo' },
+  it:{ vocals:'Aina, Candela e Mariona', bass:'Emma', guitar:'Carles', keys:'Pau Fermosel', drums:'Pau Escobedo' },
+  fr:{ vocals:'Aina, Candela et Mariona', bass:'Emma', guitar:'Carles', keys:'Pau Fermosel', drums:'Pau Escobedo' }
+};
+const memberDialogBios = {
+  es: {
+    vocals:'En las <em>voces</em>, Aina, Candela y Mariona comparten melodías, armonías y coros para dar fuerza y emoción a cada canción.',
+    bass:'En el <em>bajo</em>, Emma sostiene la base grave y conecta el ritmo con la armonía.',
+    guitar:'En la <em>guitarra</em>, Carles aporta riffs, acordes y el carácter rock del repertorio.',
+    keys:'En los <em>teclados</em>, Pau Fermosel aporta pianos, sintetizadores y arreglos que amplían el sonido.',
+    drums:'En la <em>batería</em>, Pau Escobedo marca el pulso, mueve la energía y mantiene unida a la banda.'
+  },
+  ca: {
+    vocals:'A les <em>veus</em>, Aina, Candela i Mariona comparteixen melodies, harmonies i cors per donar força i emoció a cada cançó.',
+    bass:'Al <em>baix</em>, Emma sosté la base greu i connecta el ritme amb l’harmonia.',
+    guitar:'A la <em>guitarra</em>, Carles aporta riffs, acords i el caràcter rock del repertori.',
+    keys:'Als <em>teclats</em>, Pau Fermosel aporta pianos, sintetitzadors i arranjaments que amplien el so.',
+    drums:'A la <em>bateria</em>, Pau Escobedo marca el pols, mou l’energia i manté unida la banda.'
+  },
+  en: {
+    vocals:'On <em>vocals</em>, Aina, Candela and Mariona share melodies, harmonies and choruses to bring power and emotion to every song.',
+    bass:'On <em>bass</em>, Emma anchors the low end and connects rhythm with harmony.',
+    guitar:'On <em>guitar</em>, Carles brings riffs, chords and the rock character of the set.',
+    keys:'On <em>keyboards</em>, Pau Fermosel adds piano, synthesisers and arrangements that expand the sound.',
+    drums:'On <em>drums</em>, Pau Escobedo sets the pulse, drives the energy and holds the band together.'
+  },
+  it: {
+    vocals:'Alle <em>voci</em>, Aina, Candela e Mariona condividono melodie, armonie e cori per dare forza ed emozione a ogni brano.',
+    bass:'Al <em>basso</em>, Emma sostiene le frequenze basse e collega ritmo e armonia.',
+    guitar:'Alla <em>chitarra</em>, Carles porta riff, accordi e il carattere rock del repertorio.',
+    keys:'Alle <em>tastiere</em>, Pau Fermosel aggiunge pianoforti, sintetizzatori e arrangiamenti che ampliano il suono.',
+    drums:'Alla <em>batteria</em>, Pau Escobedo segna il ritmo, muove l’energia e tiene unita la band.'
+  },
+  fr: {
+    vocals:'Aux <em>voix</em>, Aina, Candela et Mariona partagent mélodies, harmonies et chœurs pour donner force et émotion à chaque morceau.',
+    bass:'À la <em>basse</em>, Emma soutient les graves et relie le rythme à l’harmonie.',
+    guitar:'À la <em>guitare</em>, Carles apporte riffs, accords et le caractère rock du répertoire.',
+    keys:'Aux <em>claviers</em>, Pau Fermosel ajoute pianos, synthétiseurs et arrangements pour élargir le son.',
+    drums:'À la <em>batterie</em>, Pau Escobedo donne le rythme, porte l’énergie et maintient le groupe uni.'
   }
-  dialogSocial.hidden = member !== 'drums';
+};
+function openMember(member) {
+  const displayNames = memberDisplayNames[currentLanguage] || memberDisplayNames.es;
+  const editableTitle = currentLanguage === 'es' ? window.naviesEditableMemberTitles?.[member] : '';
+  dialogName.textContent = editableTitle || displayNames[member] || (translations[currentLanguage] || translations.es)[memberTitleKeys[member]];
+  const editableBio = currentLanguage === 'es' ? window.naviesEditableMemberBios?.[member] : '';
+  dialogBio.innerHTML = editableBio || (memberDialogBios[currentLanguage] || memberDialogBios.es)[member];
+  memberDialog.querySelectorAll('.dialog-social-extra').forEach((link) => link.remove());
+  const editableSocials = currentLanguage === 'es' ? window.naviesEditableMemberSocials?.[member] : null;
+  if (editableSocials?.length) {
+    const [first, ...rest] = editableSocials;
+    dialogSocial.href = first.url;
+    dialogSocial.textContent = `${first.label || 'Enlace'} ↗`;
+    dialogSocial.hidden = false;
+    let anchor = dialogSocial;
+    rest.forEach((social) => {
+      const link = dialogSocial.cloneNode();
+      link.id = '';
+      link.classList.add('dialog-social-extra');
+      link.href = social.url;
+      link.textContent = `${social.label || 'Enlace'} ↗`;
+      link.hidden = false;
+      anchor.after(link);
+      anchor = link;
+    });
+  } else {
+    dialogSocial.hidden = member !== 'drums';
+  }
   memberDialog.showModal();
 }
 document.querySelectorAll('[data-member]').forEach((card) => {
@@ -1397,14 +1456,15 @@ const year = document.querySelector('#year');
 if (year) year.textContent = new Date().getFullYear();
 document.querySelectorAll('.footer-year').forEach((element) => { element.textContent = new Date().getFullYear(); });
 
-const navyMembers = ['pauescobedo', 'marionaescobedo', 'paufermosel', 'candelagonzalez', 'carlesgonzalez', 'ainasalmeron'];
+const navyMembers = ['pauescobedo', 'marionaescobedo', 'paufermosel', 'candelagonzalez', 'carlesgonzalez', 'ainasalmeron', 'emmatuabu'];
 const navyMemberNames = {
   pauescobedo: 'Pau',
   marionaescobedo: 'Mariona',
   paufermosel: 'Fermito',
   candelagonzalez: 'Candela',
   carlesgonzalez: 'Carles',
-  ainasalmeron: 'Aina'
+  ainasalmeron: 'Aina',
+  emmatuabu: 'Emma'
 };
 const accountDialog = document.createElement('dialog');
 accountDialog.className = 'account-dialog';
@@ -1427,6 +1487,25 @@ accountDialog.innerHTML = `
     <p class="account-session-status">Sesión iniciada</p>
     <h2 class="account-member-greeting"></h2>
     <button class="account-logout" type="button">Cerrar sesión</button>
+    <section class="account-admin-panel" hidden>
+      <div class="account-admin-login">
+        <p class="account-admin-kicker">VERIFICACIÓN</p>
+        <h3>Modo administración</h3>
+        <p>Introduce el código de seis dígitos de Google Authenticator.</p>
+        <form class="account-admin-form">
+          <input name="code" inputmode="numeric" pattern="[0-9]*" autocomplete="one-time-code" maxlength="6" placeholder="000000" aria-label="Código de verificación" required>
+          <button type="submit">Verificar código</button>
+        </form>
+        <p class="account-admin-error" aria-live="polite"></p>
+      </div>
+      <div class="account-admin-session" hidden>
+        <span class="account-admin-state"><i aria-hidden="true"></i> Administración activa</span>
+        <strong class="account-admin-time">10:00</strong>
+        <small>Tiempo restante</small>
+        <button class="account-admin-extend" type="button" hidden>Extender 10 minutos</button>
+        <button class="account-admin-end" type="button">Salir del modo administración</button>
+      </div>
+    </section>
   </div>`;
 document.body.append(accountDialog);
 const authToast = document.createElement('div');
@@ -1495,6 +1574,8 @@ function updateAccountUI() {
   const copy = translations[currentLanguage] || translations.es;
   accountDialog.querySelector('.account-session-status').textContent = copy.sessionActive || translations.es.sessionActive;
   accountDialog.querySelector('.account-logout').textContent = copy.signOut || translations.es.signOut;
+  const adminPanel = accountDialog.querySelector('.account-admin-panel');
+  adminPanel.hidden = member !== 'pauescobedo';
   accountDialog.querySelector('.account-member-greeting').textContent = member ? `${copy.hello || translations.es.hello}, ${navyMemberNames[member]}.` : '';
   accountDialog.querySelector('.account-member-icon').textContent = member ? member.charAt(0).toUpperCase() : '';
 }
