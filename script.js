@@ -319,6 +319,7 @@ async function playPreparedCountdownTrack() {
   enforceStartPoint();
   try {
     await countdownAudio.play();
+    setAudioLevel(countdownAudio, 0);
     enforceStartPoint();
     await new Promise((resolve) => {
       let settled = false;
@@ -1064,14 +1065,12 @@ window.naviesConfigureSiteMusic = (settings = {}) => {
 };
 
 window.naviesApplyGeneralSettings = (settings = {}) => {
-  const volumeLevels = {
-    low:{ countdown:.16, player:.22 },
-    medium:{ countdown:.24, player:.34 },
-    high:{ countdown:.34, player:.48 }
-  };
-  const levels = volumeLevels[settings.initialVolume] || volumeLevels.medium;
-  countdownMusicVolume = levels.countdown;
-  siteMusicVolume = levels.player;
+  const legacyVolume = { low:22, medium:34, high:48 };
+  const configuredVolume = Number.isFinite(Number(settings.initialVolume))
+    ? Math.max(0, Math.min(100, Number(settings.initialVolume)))
+    : (legacyVolume[settings.initialVolume] ?? legacyVolume.medium);
+  siteMusicVolume = configuredVolume / 100;
+  countdownMusicVolume = siteMusicVolume * .7;
   if (siteMusicIndex >= 0 && siteMusicAudio.paused) {
     setAudioLevel(siteMusicAudio, countdownTracks[siteMusicIndex].file === 'have-you-ever-seen-the-rain' ? 0 : siteMusicVolume);
   }
@@ -1080,6 +1079,9 @@ window.naviesApplyGeneralSettings = (settings = {}) => {
   naviesFaviconMode = settings.faviconMode === 'static' ? 'static' : 'dynamic';
   setSeason(document.documentElement.dataset.season || 'autumn', false);
   localStorage.setItem('the-navies-fallback-language', fallbackLanguage);
+  const idleHours = settings.sessionIdleEnabled === false ? 0 : Math.max(1, Math.min(720, Number(settings.sessionIdleHours) || 24));
+  localStorage.setItem('navies-member-idle-hours', String(idleHours));
+  window.naviesSetIdleTimeout?.(idleHours);
   sessionStorage.setItem('the-navies-countdown-enabled', countdownExperienceEnabled ? '1' : '0');
   const wantsCountdown = !location.hash || location.hash === '#countdown';
   const root = document.documentElement;
@@ -1703,19 +1705,57 @@ function showAuthToast(message, state = 'active', host = document.body) {
   }, 2200);
 }
 
+const navyMemberActivityKey = 'navies-member-last-activity';
+const cachedNavyMemberIdleHours = Number(localStorage.getItem('navies-member-idle-hours'));
+let navyMemberIdleLimit = (Number.isFinite(cachedNavyMemberIdleHours) ? Math.max(0, cachedNavyMemberIdleHours) : 24) * 60 * 60 * 1000;
+let navyMemberLastActivityWrite = 0;
+let navyMemberIdleTimer = null;
+
+function clearNavyMemberSession() {
+  clearTimeout(navyMemberIdleTimer);
+  navyMemberIdleTimer = null;
+  localStorage.removeItem('navies-member-auth');
+  localStorage.removeItem('navies-member-session');
+  localStorage.removeItem(navyMemberActivityKey);
+}
+
+function navyMemberIdleExpired() {
+  if (navyMemberIdleLimit <= 0) return false;
+  const lastActivity = Number(localStorage.getItem(navyMemberActivityKey));
+  if (!lastActivity) {
+    localStorage.setItem(navyMemberActivityKey, String(Date.now()));
+    navyMemberLastActivityWrite = Date.now();
+    return false;
+  }
+  return Date.now() - lastActivity >= navyMemberIdleLimit;
+}
+
+function scheduleNavyMemberIdleLogout() {
+  clearTimeout(navyMemberIdleTimer);
+  navyMemberIdleTimer = null;
+  if (navyMemberIdleLimit <= 0) return;
+  const auth = memberAuth();
+  const lastActivity = Number(localStorage.getItem(navyMemberActivityKey));
+  if (!auth?.member?.username || !lastActivity) return;
+  const remaining = Math.max(0, navyMemberIdleLimit - (Date.now() - lastActivity));
+  navyMemberIdleTimer = setTimeout(() => {
+    if (typeof window.naviesLogout === 'function') window.naviesLogout();
+    else clearNavyMemberSession();
+  }, remaining);
+}
+
 function validNavyMember() {
   try {
     const auth = JSON.parse(localStorage.getItem('navies-member-auth'));
-    if (!auth?.member?.username || !auth.token || auth.expiresAt <= Date.now()) {
-      localStorage.removeItem('navies-member-auth');
-      localStorage.removeItem('navies-member-session');
+    if (!auth?.member?.username || !auth.token || auth.expiresAt <= Date.now() || navyMemberIdleExpired()) {
+      clearNavyMemberSession();
       return null;
     }
     navyMemberNames[auth.member.username] = auth.member.name || auth.member.username;
+    scheduleNavyMemberIdleLogout();
     return auth.member.username;
   } catch (_) {
-    localStorage.removeItem('navies-member-auth');
-    localStorage.removeItem('navies-member-session');
+    clearNavyMemberSession();
     return null;
   }
 }
@@ -1723,6 +1763,43 @@ function validNavyMember() {
 function memberAuth() { try { return JSON.parse(localStorage.getItem('navies-member-auth')) || null; } catch (_) { return null; } }
 window.naviesCurrentMember = validNavyMember;
 window.naviesMemberAccess = () => memberAuth()?.member?.access || [];
+
+function touchNavyMemberActivity(force = false) {
+  const auth = memberAuth();
+  if (!auth?.member?.username) return;
+  const now = Date.now();
+  if (!force && now - navyMemberLastActivityWrite < 60000) return;
+  localStorage.setItem(navyMemberActivityKey, String(now));
+  navyMemberLastActivityWrite = now;
+  scheduleNavyMemberIdleLogout();
+}
+
+function enforceNavyMemberInactivity() {
+  const auth = memberAuth();
+  if (!auth?.member?.username) return false;
+  if (navyMemberIdleLimit <= 0) return false;
+  const lastActivity = Number(localStorage.getItem(navyMemberActivityKey));
+  if (lastActivity && Date.now() - lastActivity >= navyMemberIdleLimit) {
+    if (typeof window.naviesLogout === 'function') window.naviesLogout();
+    else clearNavyMemberSession();
+    return true;
+  }
+  touchNavyMemberActivity();
+  return false;
+}
+
+window.naviesSetIdleTimeout = (hours) => {
+  const safeHours = Number.isFinite(Number(hours)) ? Math.max(0, Math.min(720, Number(hours))) : 24;
+  navyMemberIdleLimit = safeHours * 60 * 60 * 1000;
+  localStorage.setItem('navies-member-idle-hours', String(safeHours));
+  if (navyMemberIdleLimit <= 0) {
+    clearTimeout(navyMemberIdleTimer);
+    navyMemberIdleTimer = null;
+    return;
+  }
+  enforceNavyMemberInactivity();
+  scheduleNavyMemberIdleLogout();
+};
 
 function updateAccountTriggers(member = validNavyMember(), animate = false) {
   document.querySelectorAll('.account-trigger').forEach((trigger) => {
@@ -1791,6 +1868,7 @@ window.naviesLogin = async (username, password, { openMemberPanel = false } = {}
   navyMemberNames[member] = result.member.name || member;
   localStorage.setItem('navies-member-auth', JSON.stringify({ token:result.token, expiresAt:result.expiresAt, member:result.member }));
   localStorage.setItem('navies-member-session', member);
+  touchNavyMemberActivity(true);
   updateAccountTriggers(member, true);
   window.dispatchEvent(new CustomEvent('navies-auth-change', { detail: { member } }));
   const copy = translations[currentLanguage] || translations.es;
@@ -1833,8 +1911,7 @@ window.naviesLogin = async (username, password, { openMemberPanel = false } = {}
 };
 
 window.naviesLogout = () => {
-  localStorage.removeItem('navies-member-session');
-  localStorage.removeItem('navies-member-auth');
+  clearNavyMemberSession();
   updateAccountTriggers(null, true);
   const dialogWasOpen = accountDialog.open;
   closeAccountDialog();
@@ -1865,6 +1942,25 @@ accountDialog.querySelector('.account-login-form').addEventListener('submit', as
   }
 });
 accountDialog.querySelector('.account-logout').addEventListener('click', window.naviesLogout);
+window.addEventListener('navies-auth-change', (event) => {
+  const auth = memberAuth();
+  const member = event.detail?.member || auth?.member?.username || null;
+  if (member && auth?.member) {
+    navyMemberNames[member] = auth.member.name || member;
+    touchNavyMemberActivity(true);
+  }
+  updateAccountTriggers(member, Boolean(member));
+  updateAccountUI();
+});
+
+['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach((eventName) => {
+  window.addEventListener(eventName, enforceNavyMemberInactivity, { passive:true });
+});
+window.addEventListener('focus', enforceNavyMemberInactivity);
+window.addEventListener('pageshow', enforceNavyMemberInactivity);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') enforceNavyMemberInactivity();
+});
 updateAccountUI();
 window.naviesMemberName = (member) => {
   if (member === 'conjuntcordes') {
