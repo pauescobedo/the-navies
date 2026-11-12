@@ -124,7 +124,7 @@ def localize(source: str, language: str, translations: dict[str, str]) -> str:
         count=1,
         flags=re.S,
     )
-    for asset in ("favicon.svg", "manifest.webmanifest", "script.js", "portal.js", "styles.css", "subpages.css", "icons/"):
+    for asset in ("favicon.svg", "manifest.webmanifest", "script.js", "portal.js", "musync.js", "admin-config.js", "admin.js", "styles.css", "subpages.css", "musync.css", "icons/"):
         document = document.replace(f'href="{asset}', f'href="../{asset}')
         document = document.replace(f'src="{asset}', f'src="../{asset}')
     document = translate_elements(document, translations)
