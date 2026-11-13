@@ -494,12 +494,7 @@ function decorateScoreSongs() {
       container.append(item);
     });
     if (song.startsWith('conjunt-de-cordes/')) return;
-    const naviesLiveAudio = {
-      'sweet-caroline':'the-navies/sweet-caroline-navies',
-      'the-final-countdown':'the-navies/the-final-countdown-navies',
-      'the-final-countdown-reprise':'the-navies/the-final-countdown-reprise-navies'
-    };
-    const audioId = naviesLiveAudio[song] || (song.includes('/') ? song : `the-navies/${song}`);
+    const audioId = song.includes('/') ? song : `the-navies/${song}`;
     const audioSource = `${audioRoot}/${audioId}.mp3`;
     const divider = document.createElement('span');
     divider.className = 'audio-divider';
@@ -510,6 +505,7 @@ function decorateScoreSongs() {
     audioButton.type = 'button';
     audioButton.dataset.audioSrc = audioSource;
     audioButton.dataset.audioTitle = songTitle;
+    audioButton.dataset.practicePitchWarning = String(['sweet-caroline','the-final-countdown','the-final-countdown-reprise'].includes(song));
     audioButton.setAttribute('aria-label', `Escuchar ${songTitle}`);
     audioButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7.4v9.2L17 12 9 7.4Z"></path></svg>';
     container.append(audioButton);
@@ -563,7 +559,15 @@ window.addEventListener('navies-auth-change', () => { if (selectedEnsemble === '
 const audioDialog = document.querySelector('#audio-dialog');
 const audioPlayer = document.querySelector('#audio-player');
 const audioDialogTitle = document.querySelector('#audio-dialog-title');
+const audioDialogWarning = document.querySelector('#audio-dialog-warning');
 const audioDialogDownload = document.querySelector('#audio-dialog-download');
+const practicePitchWarning = ({
+  es:'Esta es la versión original y no está en el tono con el que se tocará en el concierto. Para ensayar en el tono correcto, abre Musync y selecciona la versión de práctica.',
+  ca:'Aquesta és la versió original i no està en el to amb què es tocarà al concert. Per assajar en el to correcte, obre Musync i selecciona la versió de pràctica.',
+  en:'This is the original version and it is not in the key that will be used at the concert. To rehearse in the correct key, open Musync and select the practice version.',
+  fr:'Il s’agit de la version originale, qui n’est pas dans la tonalité utilisée au concert. Pour répéter dans la bonne tonalité, ouvre Musync et sélectionne la version de répétition.',
+  it:'Questa è la versione originale e non è nella tonalità che verrà usata al concerto. Per provare nella tonalità corretta, apri Musync e seleziona la versione di prova.'
+})[portalLanguage] || 'Esta es la versión original y no está en el tono con el que se tocará en el concierto. Para ensayar en el tono correcto, abre Musync y selecciona la versión de práctica.';
 let navyAudioYieldingToSiteMusic = false;
 audioPlayer.addEventListener('play', () => window.naviesPauseSiteMusicForNavyAudio?.());
 audioPlayer.addEventListener('pause', () => {
@@ -581,6 +585,8 @@ document.addEventListener('click', (event) => {
   const button = event.target.closest('.audio-open');
   if (!button) return;
   audioDialogTitle.textContent = button.dataset.audioTitle;
+  audioDialogWarning.hidden = button.dataset.practicePitchWarning !== 'true';
+  audioDialogWarning.textContent = audioDialogWarning.hidden ? '' : practicePitchWarning;
   audioPlayer.src = button.dataset.audioSrc;
   audioDialogDownload.href = button.dataset.audioSrc;
   audioDialogDownload.setAttribute('download', '');
