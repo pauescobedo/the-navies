@@ -30,11 +30,11 @@ Object.assign(editorText, ({
   it:{ live:'Navies Live', liveTitle:'Titolo di Navies Live', liveDescription:'Descrizione di Navies Live', socialNetworks:'Social media', socialNetworksCopy:'Link pubblici mostrati nella pagina Home.', addSocial:'Aggiungi social', dialogTitle:'Titolo interno', socialLabel:'Testo del link', socialUrl:'Link personale', siteEditing:'Modifica del Sito', general:'Impostazioni generali', generalCopy:'Preferenze comuni per tutto il sito.', defaultSeason:'Tema predefinito', initialPlayback:'Primo brano del lettore', randomPlayback:'Casuale', customPlayback:'Brano personalizzato', initialSong:'Brano iniziale', countdownSetting:'Landing e conto alla rovescia', enabled:'Attivato', disabled:'Disattivato', initialVolume:'Volum iniziale', lowVolume:'Basso', mediumVolume:'Medio', highVolume:'Alto', fallbackLanguage:'Lingua di riserva', faviconMode:'Icona della scheda', dynamicFavicon:'Dinamica · colore stagionale', staticFavicon:'Statica · punto verde', saveBeforeExit:'Ci sono modifiche non salvate. Vuoi salvarle prima di uscire?', singer:'Cantante' }
 }[portalLanguage] || {}));
 Object.assign(editorText, ({
-  es:{ sessionInactivity:'Cierre por inactividad', inactivityHours:'Tiempo sin actividad', hours:'horas' },
-  ca:{ sessionInactivity:'Tancament per inactivitat', inactivityHours:'Temps sense activitat', hours:'hores' },
-  en:{ sessionInactivity:'Sign out after inactivity', inactivityHours:'Inactive time', hours:'hours' },
-  fr:{ sessionInactivity:'Déconnexion pour inactivité', inactivityHours:'Durée d’inactivité', hours:'heures' },
-  it:{ sessionInactivity:'Disconnessione per inattività', inactivityHours:'Tempo di inattività', hours:'ore' }
+  es:{ sessionInactivity:'Cierre por inactividad', inactivityHours:'Tiempo sin actividad', hours:'horas', day:'día', days:'días', comingSoonToggle:'Próximamente' },
+  ca:{ sessionInactivity:'Tancament per inactivitat', inactivityHours:'Temps sense activitat', hours:'hores', day:'dia', days:'dies', comingSoonToggle:'Pròximament' },
+  en:{ sessionInactivity:'Sign out after inactivity', inactivityHours:'Inactive time', hours:'hours', day:'day', days:'days', comingSoonToggle:'Coming soon' },
+  fr:{ sessionInactivity:'Déconnexion pour inactivité', inactivityHours:'Durée d’inactivité', hours:'heures', day:'jour', days:'jours', comingSoonToggle:'Prochainement' },
+  it:{ sessionInactivity:'Disconnessione per inattività', inactivityHours:'Tempo di inattività', hours:'ore', day:'giorno', days:'giorni', comingSoonToggle:'Prossimamente' }
 }[portalLanguage] || {}));
 Object.assign(editorText, ({
   es:{ customPlayback:'Personalizada', dynamicFavicon:'Dinámico', staticFavicon:'Estático' },
@@ -402,7 +402,8 @@ function renderHomeContent(home) {
       if (meta) { const paragraph = document.createElement('p'); paragraph.textContent = meta; details.append(paragraph); }
       const status = document.createElement('span');
       status.textContent = ({ ca:'Pròximament', en:'Coming soon', fr:'Prochainement', it:'Prossimamente' })[language] || 'Próximamente';
-      article.append(time, details, status);
+      article.append(time, details);
+      if (concert.showSoon !== false) article.append(status);
       list.append(article);
     });
   }
@@ -1419,7 +1420,17 @@ function concertEditorRow(concert = {}) {
     month.append(option);
   }
   monthLabelElement.append(month);
-  row.append(field(editorText.name, 'name', concert.name, 'text', { maxlength:'160', required:'' }), field(editorText.day, 'day', concert.day, 'number', { min:'1', max:'31', inputmode:'numeric' }), monthLabelElement, field(editorText.year, 'year', concert.year || String(new Date().getFullYear()), 'number', { min:'2026', max:'2100', required:'' }), field(editorText.time, 'time', concert.time, 'time'), field(editorText.place, 'location', concert.location, 'text', { maxlength:'160' }), rowActions('concert'));
+  const soonField = document.createElement('label');
+  soonField.className = 'editor-concert-soon';
+  soonField.innerHTML = `<span>${editorText.comingSoonToggle}</span>`;
+  const soonInput = document.createElement('input');
+  soonInput.type = 'checkbox';
+  soonInput.name = 'showSoon';
+  soonInput.checked = concert.showSoon ?? concert.status === 'soon';
+  const soonControl = document.createElement('i');
+  soonControl.setAttribute('aria-hidden', 'true');
+  soonField.append(soonInput, soonControl);
+  row.append(field(editorText.name, 'name', concert.name, 'text', { maxlength:'160', required:'' }), field(editorText.day, 'day', concert.day, 'number', { min:'1', max:'31', inputmode:'numeric' }), monthLabelElement, field(editorText.year, 'year', concert.year || String(new Date().getFullYear()), 'number', { min:'2026', max:'2100', required:'' }), field(editorText.time, 'time', concert.time, 'time'), field(editorText.place, 'location', concert.location, 'text', { maxlength:'160' }), soonField, rowActions('concert'));
   return row;
 }
 
@@ -1563,21 +1574,32 @@ function populateEditor() {
   const idleSlider = document.createElement('input');
   idleSlider.type = 'range';
   idleSlider.name = 'sessionIdleHours';
-  idleSlider.min = '1';
-  idleSlider.max = '720';
-  idleSlider.step = '1';
-  idleSlider.value = String(Math.max(1, Math.min(720, Number(navyContent.home.settings?.sessionIdleHours) || 24)));
+  idleSlider.min = '24';
+  idleSlider.max = '168';
+  idleSlider.step = '24';
+  const savedIdleHours = Math.max(24, Math.min(168, Number(navyContent.home.settings?.sessionIdleHours) || 24));
+  idleSlider.value = String(Math.round(savedIdleHours / 24) * 24);
+  const idleMarks = document.createElement('div');
+  idleMarks.className = 'editor-idle-marks';
+  for (let hours = 24; hours <= 168; hours += 24) {
+    const days = hours / 24;
+    const mark = document.createElement('span');
+    mark.textContent = `${days} ${days === 1 ? editorText.day : editorText.days}`;
+    mark.style.setProperty('--mark-position', `${((days - 1) / 6) * 100}%`);
+    idleMarks.append(mark);
+  }
   const syncIdleSetting = () => {
     const enabled = idleInput.checked;
     idleState.textContent = enabled ? editorText.enabled : editorText.disabled;
     idleRangeWrap.classList.toggle('is-disabled', !enabled);
     idleSlider.disabled = !enabled;
-    idleValue.textContent = `${idleSlider.value} ${editorText.hours}`;
-    idleSlider.style.setProperty('--volume-track', `${((Number(idleSlider.value) - 1) / 719) * 100}%`);
+    const days = Number(idleSlider.value) / 24;
+    idleValue.textContent = `${days} ${days === 1 ? editorText.day : editorText.days}`;
+    idleSlider.style.setProperty('--volume-track', `${((Number(idleSlider.value) - 24) / 144) * 100}%`);
   };
   idleInput.addEventListener('change', syncIdleSetting);
   idleSlider.addEventListener('input', syncIdleSetting);
-  idleRangeWrap.append(idleRangeHead, idleSlider);
+  idleRangeWrap.append(idleRangeHead, idleSlider, idleMarks);
   idleField.append(idleSwitch, idleRangeWrap);
   syncIdleSetting();
   const languageNames = { ca:'Català', es:'Castellano', en:'English', fr:'Français', it:'Italiano' };
@@ -1616,7 +1638,7 @@ function editorContent() {
   const countdownEnabled = contentEditor.querySelector('[name="countdownEnabled"]').checked;
   const initialVolume = Math.max(0, Math.min(100, Number(contentEditor.querySelector('[name="initialVolume"]').value) || 0));
   const sessionIdleEnabled = contentEditor.querySelector('[name="sessionIdleEnabled"]').checked;
-  const sessionIdleHours = Math.max(1, Math.min(720, Number(contentEditor.querySelector('[name="sessionIdleHours"]').value) || 24));
+  const sessionIdleHours = Math.max(24, Math.min(168, Number(contentEditor.querySelector('[name="sessionIdleHours"]').value) || 24));
   const fallbackLanguage = contentEditor.querySelector('[name="fallbackLanguage"]').value;
   const faviconMode = contentEditor.querySelector('[name="faviconMode"]').value;
   const concerts = [...contentEditor.querySelectorAll('.editor-concert-row')].map((row, index) => ({
@@ -1627,6 +1649,7 @@ function editorContent() {
     year:row.querySelector('[name="year"]').value,
     time:row.querySelector('[name="time"]').value,
     location:row.querySelector('[name="location"]').value.trim(),
+    showSoon:row.querySelector('[name="showSoon"]').checked,
     status:index === 0 ? 'next' : 'soon'
   }));
   const members = [...contentEditor.querySelectorAll('.editor-member-row')].map((row) => ({
@@ -1823,7 +1846,7 @@ contentEditor.addEventListener('click', (event) => {
   if (add) {
     const kind = add.dataset.editorAdd;
     const list = contentEditor.querySelector(`[data-editor-list="${kind}s"]`);
-    const row = kind === 'event' ? eventEditorRow({ type:'rehearsal', name:'', date:localToday(), time:'17:30', location:'' }) : kind === 'song' ? songEditorRow() : kind === 'concert' ? concertEditorRow({ name:editorText.newConcert, day:'', month:'12', year:String(new Date().getFullYear()), time:'', location:'' }) : kind === 'social' ? socialEditorRow() : kind === 'user' ? userEditorRow({ access:[] }) : linkEditorRow();
+    const row = kind === 'event' ? eventEditorRow({ type:'rehearsal', name:'', date:localToday(), time:'17:30', location:'' }) : kind === 'song' ? songEditorRow() : kind === 'concert' ? concertEditorRow({ name:editorText.newConcert, day:'', month:'12', year:String(new Date().getFullYear()), time:'', location:'', showSoon:true, status:'soon' }) : kind === 'social' ? socialEditorRow() : kind === 'user' ? userEditorRow({ access:[] }) : linkEditorRow();
     list.append(row);
     if (kind === 'event') sortEventEditorRows(list);
     refreshEditorDirty();

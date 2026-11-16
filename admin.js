@@ -185,6 +185,10 @@
     update();
   });
 
+  window.addEventListener('pagehide', () => {
+    sessionStorage.removeItem(sessionKey);
+  });
+
   window.addEventListener('navies-auth-change', (event) => {
     if (!event.detail?.member) {
       clearSession();

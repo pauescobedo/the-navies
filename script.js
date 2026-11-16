@@ -904,21 +904,21 @@ Object.assign(translations.en, { countdownSoundOff:'Mute music', countdownSoundO
 Object.assign(translations.it, { countdownSoundOff:'Disattiva la musica', countdownSoundOn:'Attiva la musica' });
 Object.assign(translations.fr, { countdownSoundOff:'Couper la musique', countdownSoundOn:'Activer la musique' });
 
-Object.assign(translations.es, { rightsReserved:'Todos los derechos reservados', collaboration:'Con la colaboración de' });
-Object.assign(translations.ca, { rightsReserved:'Tots els drets reservats', collaboration:'Amb la col·laboració de' });
-Object.assign(translations.en, { rightsReserved:'All rights reserved', collaboration:'In collaboration with' });
-Object.assign(translations.it, { rightsReserved:'Tutti i diritti riservati', collaboration:'In collaborazione con' });
-Object.assign(translations.fr, { rightsReserved:'Tous droits réservés', collaboration:'En collaboration avec' });
+Object.assign(translations.es, { rightsReserved:'Todos los derechos reservados', collaboration:'Agradecimientos a' });
+Object.assign(translations.ca, { rightsReserved:'Tots els drets reservats', collaboration:'Agraïments a' });
+Object.assign(translations.en, { rightsReserved:'All rights reserved', collaboration:'Thanks to' });
+Object.assign(translations.it, { rightsReserved:'Tutti i diritti riservati', collaboration:'Ringraziamenti a' });
+Object.assign(translations.fr, { rightsReserved:'Tous droits réservés', collaboration:'Remerciements à' });
 Object.assign(translations.es, { musicPrevious:'Canción anterior', musicPlay:'Reproducir música', musicPause:'Pausar música', musicNext:'Siguiente canción', musicMute:'Silenciar música', musicUnmute:'Activar sonido' });
 Object.assign(translations.ca, { musicPrevious:'Cançó anterior', musicPlay:'Reprodueix música', musicPause:'Pausa la música', musicNext:'Cançó següent', musicMute:'Silencia la música', musicUnmute:'Activa el so' });
 Object.assign(translations.en, { musicPrevious:'Previous song', musicPlay:'Play music', musicPause:'Pause music', musicNext:'Next song', musicMute:'Mute music', musicUnmute:'Turn sound on' });
 Object.assign(translations.it, { musicPrevious:'Brano precedente', musicPlay:'Riproduci musica', musicPause:'Metti in pausa', musicNext:'Brano successivo', musicMute:'Disattiva la musica', musicUnmute:'Attiva il suono' });
 Object.assign(translations.fr, { musicPrevious:'Chanson précédente', musicPlay:'Lancer la musique', musicPause:'Mettre en pause', musicNext:'Chanson suivante', musicMute:'Couper la musique', musicUnmute:'Activer le son' });
-Object.assign(translations.es, { bcnIntro:'En este camino contamos con la colaboración de <a class="bcn-highlight" href="https://bcnfusio.cat" target="_blank" rel="noopener">BCN Fusió</a>, que nos acompaña y nos ayuda a seguir creciendo como banda.' });
-Object.assign(translations.ca, { bcnIntro:'En aquest camí comptem amb la col·laboració de <a class="bcn-highlight" href="https://bcnfusio.cat" target="_blank" rel="noopener">BCN Fusió</a>, que ens acompanya i ens ajuda a continuar creixent com a banda.' });
-Object.assign(translations.en, { bcnIntro:'Along the way, we have the support of <a class="bcn-highlight" href="https://bcnfusio.cat" target="_blank" rel="noopener">BCN Fusió</a>, who are helping us continue to grow as a band.' });
-Object.assign(translations.it, { bcnIntro:'In questo percorso contiamo sulla collaborazione di <a class="bcn-highlight" href="https://bcnfusio.cat" target="_blank" rel="noopener">BCN Fusió</a>, che ci accompagna e ci aiuta a continuare a crescere come band.' });
-Object.assign(translations.fr, { bcnIntro:'Dans cette aventure, nous bénéficions de la collaboration de <a class="bcn-highlight" href="https://bcnfusio.cat" target="_blank" rel="noopener">BCN Fusió</a>, qui nous accompagne et nous aide à continuer de grandir en tant que groupe.' });
+Object.assign(translations.es, { bcnIntro:'Nuestro agradecimiento a <a class="bcn-highlight" href="https://bcnfusio.cat" target="_blank" rel="noopener">BCN Fusió</a>, que nos acompaña y nos ayuda a seguir creciendo como banda.' });
+Object.assign(translations.ca, { bcnIntro:'El nostre agraïment a <a class="bcn-highlight" href="https://bcnfusio.cat" target="_blank" rel="noopener">BCN Fusió</a>, que ens acompanya i ens ajuda a continuar creixent com a banda.' });
+Object.assign(translations.en, { bcnIntro:'Our thanks to <a class="bcn-highlight" href="https://bcnfusio.cat" target="_blank" rel="noopener">BCN Fusió</a>, who support us and help us continue to grow as a band.' });
+Object.assign(translations.it, { bcnIntro:'Il nostro ringraziamento a <a class="bcn-highlight" href="https://bcnfusio.cat" target="_blank" rel="noopener">BCN Fusió</a>, che ci accompagna e ci aiuta a continuare a crescere come band.' });
+Object.assign(translations.fr, { bcnIntro:'Nos remerciements à <a class="bcn-highlight" href="https://bcnfusio.cat" target="_blank" rel="noopener">BCN Fusió</a>, qui nous accompagne et nous aide à continuer de grandir en tant que groupe.' });
 
 const seasonThemes = {
   spring: { color:'#F4A7C1', icon:'🌸' },
@@ -930,7 +930,7 @@ let naviesFaviconMode = 'dynamic';
 let siteFooter = document.querySelector('footer');
 if (!siteFooter) {
   siteFooter = document.createElement('footer');
-  siteFooter.innerHTML = '<a class="brand" href="#inicio" data-route="home">THE NAVIES<span>.</span></a><p class="footer-copyright">© <span class="footer-year"></span> The Navies<span data-i18n="rightsReserved">Todos los derechos reservados</span></p><p class="footer-credit"><span data-i18n="collaboration">Con la colaboración de</span> <a href="https://bcnfusio.cat" target="_blank" rel="noopener">BCN Fusió ↗</a></p>';
+  siteFooter.innerHTML = '<a class="brand" href="#inicio" data-route="home">THE NAVIES<span>.</span></a><p class="footer-copyright">© <span class="footer-year"></span> The Navies<span data-i18n="rightsReserved">Todos los derechos reservados</span></p><p class="footer-credit"><span data-i18n="collaboration">Agradecimientos a</span> <a href="https://bcnfusio.cat" target="_blank" rel="noopener">BCN Fusió ↗</a></p>';
   document.body.append(siteFooter);
 }
 const footerQuickPlayer = document.querySelector('.footer-quick-player');
