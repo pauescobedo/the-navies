@@ -914,11 +914,11 @@ Object.assign(translations.ca, { musicPrevious:'Cançó anterior', musicPlay:'Re
 Object.assign(translations.en, { musicPrevious:'Previous song', musicPlay:'Play music', musicPause:'Pause music', musicNext:'Next song', musicMute:'Mute music', musicUnmute:'Turn sound on' });
 Object.assign(translations.it, { musicPrevious:'Brano precedente', musicPlay:'Riproduci musica', musicPause:'Metti in pausa', musicNext:'Brano successivo', musicMute:'Disattiva la musica', musicUnmute:'Attiva il suono' });
 Object.assign(translations.fr, { musicPrevious:'Chanson précédente', musicPlay:'Lancer la musique', musicPause:'Mettre en pause', musicNext:'Chanson suivante', musicMute:'Couper la musique', musicUnmute:'Activer le son' });
-Object.assign(translations.es, { bcnIntro:'Nuestro agradecimiento a <a class="bcn-highlight" href="https://bcnfusio.cat" target="_blank" rel="noopener">BCN Fusió</a>, que nos acompaña y nos ayuda a seguir creciendo como banda.' });
-Object.assign(translations.ca, { bcnIntro:'El nostre agraïment a <a class="bcn-highlight" href="https://bcnfusio.cat" target="_blank" rel="noopener">BCN Fusió</a>, que ens acompanya i ens ajuda a continuar creixent com a banda.' });
-Object.assign(translations.en, { bcnIntro:'Our thanks to <a class="bcn-highlight" href="https://bcnfusio.cat" target="_blank" rel="noopener">BCN Fusió</a>, who support us and help us continue to grow as a band.' });
-Object.assign(translations.it, { bcnIntro:'Il nostro ringraziamento a <a class="bcn-highlight" href="https://bcnfusio.cat" target="_blank" rel="noopener">BCN Fusió</a>, che ci accompagna e ci aiuta a continuare a crescere come band.' });
-Object.assign(translations.fr, { bcnIntro:'Nos remerciements à <a class="bcn-highlight" href="https://bcnfusio.cat" target="_blank" rel="noopener">BCN Fusió</a>, qui nous accompagne et nous aide à continuer de grandir en tant que groupe.' });
+Object.assign(translations.es, { bcnIntro:'Nuestro agradecimiento a <a class="bcn-highlight" href="https://bcnfusio.cat" target="_blank" rel="noopener">BCN Fusió</a> por su colaboración.' });
+Object.assign(translations.ca, { bcnIntro:'El nostre agraïment a <a class="bcn-highlight" href="https://bcnfusio.cat" target="_blank" rel="noopener">BCN Fusió</a> per la seva col·laboració.' });
+Object.assign(translations.en, { bcnIntro:'Our thanks to <a class="bcn-highlight" href="https://bcnfusio.cat" target="_blank" rel="noopener">BCN Fusió</a> for their collaboration.' });
+Object.assign(translations.it, { bcnIntro:'Il nostro ringraziamento a <a class="bcn-highlight" href="https://bcnfusio.cat" target="_blank" rel="noopener">BCN Fusió</a> per la collaborazione.' });
+Object.assign(translations.fr, { bcnIntro:'Nos remerciements à <a class="bcn-highlight" href="https://bcnfusio.cat" target="_blank" rel="noopener">BCN Fusió</a> pour sa collaboration.' });
 
 const seasonThemes = {
   spring: { color:'#F4A7C1', icon:'🌸' },
