@@ -23,6 +23,16 @@ const editorCopies = {
 };
 const editorText = editorCopies[portalLanguage] || editorCopies.es;
 Object.assign(editorText, ({
+  es:{ translations:'Traducciones', translationsCopy:'Genera y revisa las versiones en catalán, inglés, francés e italiano.', translateAll:'Traducir contenido', translating:'Traduciendo…', translated:'Traducciones preparadas. Revísalas antes de guardar.', translateError:'No se ha podido completar la traducción.', translatedTexts:'Textos principales', translatedConcerts:'Conciertos', translatedMembers:'Músicos' },
+  ca:{ translations:'Traduccions', translationsCopy:'Genera i revisa les versions en català, anglès, francès i italià.', translateAll:'Traduir contingut', translating:'Traduint…', translated:'Traduccions preparades. Revisa-les abans de desar.', translateError:'No s’ha pogut completar la traducció.', translatedTexts:'Textos principals', translatedConcerts:'Concerts', translatedMembers:'Músics' },
+  en:{ translations:'Translations', translationsCopy:'Generate and review the Catalan, English, French and Italian versions.', translateAll:'Translate content', translating:'Translating…', translated:'Translations are ready. Review them before saving.', translateError:'The translation could not be completed.', translatedTexts:'Main text', translatedConcerts:'Shows', translatedMembers:'Musicians' },
+  fr:{ translations:'Traductions', translationsCopy:'Générez et révisez les versions catalane, anglaise, française et italienne.', translateAll:'Traduire le contenu', translating:'Traduction…', translated:'Les traductions sont prêtes. Vérifiez-les avant d’enregistrer.', translateError:'La traduction n’a pas pu être effectuée.', translatedTexts:'Textes principaux', translatedConcerts:'Concerts', translatedMembers:'Musiciens' },
+  it:{ translations:'Traduzioni', translationsCopy:'Genera e controlla le versioni in catalano, inglese, francese e italiano.', translateAll:'Traduci contenuto', translating:'Traduzione…', translated:'Le traduzioni sono pronte. Controllale prima di salvare.', translateError:'Non è stato possibile completare la traduzione.', translatedTexts:'Testi principali', translatedConcerts:'Concerti', translatedMembers:'Musicisti' }
+}[portalLanguage] || {}));
+Object.assign(editorText, ({
+  es:{ saveTranslate:'Guardar y traducir' }, ca:{ saveTranslate:'Desar i traduir' }, en:{ saveTranslate:'Save and translate' }, fr:{ saveTranslate:'Enregistrer et traduire' }, it:{ saveTranslate:'Salva e traduci' }
+}[portalLanguage] || {}));
+Object.assign(editorText, ({
   es:{ live:'Navies Live', liveTitle:'Título de Navies Live', liveDescription:'Descripción de Navies Live', socialNetworks:'Redes sociales', socialNetworksCopy:'Enlaces públicos mostrados en la página de Inicio.', addSocial:'Añadir red', dialogTitle:'Título interior', socialLabel:'Texto del enlace', socialUrl:'Enlace personal', siteEditing:'Edición del Sitio', general:'Ajustes generales', generalCopy:'Preferencias comunes para toda la web.', defaultSeason:'Tema predeterminado', initialPlayback:'Primera canción del reproductor', randomPlayback:'Aleatoria', customPlayback:'Canción personalizada', initialSong:'Canción inicial', countdownSetting:'Landing y cuenta atrás', enabled:'Activada', disabled:'Desactivada', initialVolume:'Volumen inicial', lowVolume:'Bajo', mediumVolume:'Medio', highVolume:'Alto', fallbackLanguage:'Idioma de respaldo', faviconMode:'Icono de la pestaña', dynamicFavicon:'Dinámico · color estacional', staticFavicon:'Estático · punto verde', saveBeforeExit:'Hay cambios sin guardar. ¿Quieres guardarlos antes de salir?', singer:'Cantante' },
   ca:{ live:'Navies Live', liveTitle:'Títol de Navies Live', liveDescription:'Descripció de Navies Live', socialNetworks:'Xarxes socials', socialNetworksCopy:'Enllaços públics mostrats a la pàgina d’Inici.', addSocial:'Afegir xarxa', dialogTitle:'Títol interior', socialLabel:'Text de l’enllaç', socialUrl:'Enllaç personal', siteEditing:'Edició del Lloc', general:'Configuració general', generalCopy:'Preferències comunes per a tot el web.', defaultSeason:'Tema predeterminat', initialPlayback:'Primera cançó del reproductor', randomPlayback:'Aleatòria', customPlayback:'Cançó personalitzada', initialSong:'Cançó inicial', countdownSetting:'Landing i compte enrere', enabled:'Activat', disabled:'Desactivat', initialVolume:'Volum inicial', lowVolume:'Baix', mediumVolume:'Mitjà', highVolume:'Alt', fallbackLanguage:'Idioma de reserva', faviconMode:'Icona de la pestanya', dynamicFavicon:'Dinàmica · color estacional', staticFavicon:'Estàtica · punt verd', saveBeforeExit:'Hi ha canvis sense desar. Vols desar-los abans de sortir?', singer:'Cantant' },
   en:{ live:'Navies Live', liveTitle:'Navies Live title', liveDescription:'Navies Live description', socialNetworks:'Social media', socialNetworksCopy:'Public links shown on the Home page.', addSocial:'Add social link', dialogTitle:'Inner title', socialLabel:'Link text', socialUrl:'Personal link', siteEditing:'Site Editing', general:'General settings', generalCopy:'Shared preferences for the whole website.', defaultSeason:'Default theme', initialPlayback:'First player track', randomPlayback:'Random', customPlayback:'Custom track', initialSong:'First track', countdownSetting:'Landing and countdown', enabled:'Enabled', disabled:'Disabled', initialVolume:'Initial volume', lowVolume:'Low', mediumVolume:'Medium', highVolume:'High', fallbackLanguage:'Fallback language', faviconMode:'Browser tab icon', dynamicFavicon:'Dynamic · seasonal colour', staticFavicon:'Static · green dot', saveBeforeExit:'There are unsaved changes. Save them before leaving?', singer:'Singer' },
@@ -310,8 +320,85 @@ const builtInConcertNames = {
   'end-course-2027':{ es:'Concierto de Final de Curso', ca:'Concert de Final de Curs', en:'End-of-year Concert', fr:'Concert de fin d’année', it:'Concerto di fine anno' }
 };
 
+const curatedHomeTranslations = {
+  ca:{
+    texts:{
+      heroIntro:'Som set músics joves units per les ganes de tocar en directe i portar clàssics del rock i del pop a cada escenari amb energia i personalitat.',
+      soundBody:'Una barreja de clàssics del rock, grans cançons pop i aquells himnes que tothom reconeix des del primer acord. Set músics, veus compartides i un directe pensat per connectar, cantar i gaudir plegats.',
+      bandBody:'Som set joves apassionats per la música, units per les ganes de tocar, aprendre i gaudir plegats sobre l’escenari. Cada veu i cada instrument formen part de The Navies amb el mateix pes.'
+    },
+    concerts:Object.fromEntries(Object.entries(builtInConcertNames).map(([id, names]) => [id,names.ca])),
+    members:{
+      vocals:{ instrument:'Veus', summary:'Tres veus per a melodies, harmonies i cors.', bio:'Aina, Candela González i Mariona Escobedo comparteixen melodies, harmonies i cors per donar força i emoció a cada cançó.' },
+      bass:{ instrument:'Baix', summary:'La base greu que uneix ritme i harmonia.', bio:'Emma Tubau sosté la base greu i connecta el ritme amb l’harmonia.' },
+      guitar:{ instrument:'Guitarra', summary:'Riffs, acords i el caràcter rock del grup.', bio:'Carles aporta riffs, acords i el caràcter rock del repertori.' },
+      keys:{ instrument:'Teclats', summary:'Pianos, sintetitzadors i capes que amplien el so.', bio:'Pau Fermosel aporta pianos, sintetitzadors i arranjaments que amplien el so.' },
+      drums:{ instrument:'Bateria', summary:'El pols que mou l’energia i manté unida la banda.', bio:'Pau Escobedo marca el pols, mou l’energia i manté unida la banda des de la bateria.' }
+    }
+  },
+  en:{
+    texts:{
+      heroIntro:'We are seven young musicians brought together by a love of playing live and bringing rock and pop classics to every stage with energy and personality.',
+      soundBody:'A mix of rock classics, great pop songs and the anthems everyone recognises from the very first chord. Seven musicians, shared vocals and a live show made for connecting, singing and enjoying together.',
+      bandBody:'We are seven young musicians brought together by a passion for music and a desire to play, learn and enjoy the stage together. Every voice and every instrument has an equal place in The Navies.'
+    },
+    concerts:Object.fromEntries(Object.entries(builtInConcertNames).map(([id, names]) => [id,names.en])),
+    members:{
+      vocals:{ instrument:'Vocals', summary:'Three voices for melodies, harmonies and backing vocals.', bio:'Aina, Candela González and Mariona Escobedo share melodies, harmonies and backing vocals, bringing strength and emotion to every song.' },
+      bass:{ instrument:'Bass', summary:'The low-end foundation linking rhythm and harmony.', bio:'Emma Tubau holds down the low end and connects rhythm with harmony.' },
+      guitar:{ instrument:'Guitar', summary:'Riffs, chords and the band’s rock character.', bio:'Carles brings the riffs, chords and rock character of the repertoire.' },
+      keys:{ instrument:'Keys', summary:'Pianos, synthesisers and layers that broaden the sound.', bio:'Pau Fermosel adds pianos, synthesisers and arrangements that broaden the sound.' },
+      drums:{ instrument:'Drums', summary:'The pulse that drives the energy and holds the band together.', bio:'Pau Escobedo sets the pulse, drives the energy and holds the band together from behind the drums.' }
+    }
+  },
+  fr:{
+    texts:{
+      heroIntro:'Nous sommes sept jeunes musiciens réunis par l’envie de jouer en concert et de porter les classiques du rock et de la pop sur scène avec énergie et personnalité.',
+      soundBody:'Un mélange de classiques du rock, de grands titres pop et de ces hymnes que tout le monde reconnaît dès le premier accord. Sept musiciens, des voix partagées et un concert conçu pour créer du lien, chanter et profiter ensemble.',
+      bandBody:'Nous sommes sept jeunes passionnés de musique, réunis par l’envie de jouer, d’apprendre et de partager la scène. Chaque voix et chaque instrument occupent la même place au sein de The Navies.'
+    },
+    concerts:Object.fromEntries(Object.entries(builtInConcertNames).map(([id, names]) => [id,names.fr])),
+    members:{
+      vocals:{ instrument:'Voix', summary:'Trois voix pour les mélodies, les harmonies et les chœurs.', bio:'Aina, Candela González et Mariona Escobedo partagent mélodies, harmonies et chœurs pour donner force et émotion à chaque morceau.' },
+      bass:{ instrument:'Basse', summary:'La fondation grave qui relie rythme et harmonie.', bio:'Emma Tubau soutient les graves et relie le rythme à l’harmonie.' },
+      guitar:{ instrument:'Guitare', summary:'Des riffs, des accords et le caractère rock du groupe.', bio:'Carles apporte les riffs, les accords et le caractère rock du répertoire.' },
+      keys:{ instrument:'Claviers', summary:'Pianos, synthétiseurs et textures qui enrichissent le son.', bio:'Pau Fermosel ajoute pianos, synthétiseurs et arrangements pour enrichir le son.' },
+      drums:{ instrument:'Batterie', summary:'Le pouls qui porte l’énergie et maintient le groupe uni.', bio:'Pau Escobedo donne le rythme, porte l’énergie et maintient le groupe uni depuis la batterie.' }
+    }
+  },
+  it:{
+    texts:{
+      heroIntro:'Siamo sette giovani musicisti uniti dalla voglia di suonare dal vivo e portare i classici del rock e del pop su ogni palco con energia e personalità.',
+      soundBody:'Un mix di classici del rock, grandi canzoni pop e inni che tutti riconoscono fin dal primo accordo. Sette musicisti, voci condivise e uno spettacolo dal vivo pensato per coinvolgere, cantare e divertirsi insieme.',
+      bandBody:'Siamo sette giovani appassionati di musica, uniti dalla voglia di suonare, imparare e divertirci insieme sul palco. Ogni voce e ogni strumento hanno lo stesso valore nei The Navies.'
+    },
+    concerts:Object.fromEntries(Object.entries(builtInConcertNames).map(([id, names]) => [id,names.it])),
+    members:{
+      vocals:{ instrument:'Voci', summary:'Tre voci per melodie, armonie e cori.', bio:'Aina, Candela González e Mariona Escobedo condividono melodie, armonie e cori per dare forza ed emozione a ogni canzone.' },
+      bass:{ instrument:'Basso', summary:'La base grave che unisce ritmo e armonia.', bio:'Emma Tubau sostiene le frequenze basse e collega il ritmo all’armonia.' },
+      guitar:{ instrument:'Chitarra', summary:'Riff, accordi e il carattere rock del gruppo.', bio:'Carles porta riff, accordi e il carattere rock del repertorio.' },
+      keys:{ instrument:'Tastiere', summary:'Pianoforti, sintetizzatori e trame che ampliano il suono.', bio:'Pau Fermosel aggiunge pianoforti, sintetizzatori e arrangiamenti che ampliano il suono.' },
+      drums:{ instrument:'Batteria', summary:'Il battito che muove l’energia e tiene unita la band.', bio:'Pau Escobedo segna il ritmo, muove l’energia e tiene unita la band dalla batteria.' }
+    }
+  }
+};
+
+function mergeHomeTranslations(stored = {}) {
+  return Object.fromEntries(Object.keys(curatedHomeTranslations).map((language) => {
+    const base = curatedHomeTranslations[language];
+    const saved = stored[language] || {};
+    return [language, {
+      texts:{ ...base.texts, ...(saved.texts || {}) },
+      concerts:{ ...base.concerts, ...(saved.concerts || {}) },
+      members:Object.fromEntries(Object.keys(base.members).map((id) => [id, { ...base.members[id], ...(saved.members?.[id] || {}) }]))
+    }];
+  }));
+}
+
 function concertName(concert) {
   const language = (document.documentElement.lang || 'es').slice(0, 2);
+  const translated = window.naviesHomeTranslations?.[language]?.concerts?.[concert.id];
+  if (translated) return translated;
   const defaults = builtInConcertNames[concert.id];
   return defaults && concert.name === defaults.es ? (defaults[language] || defaults.es) : concert.name;
 }
@@ -322,40 +409,46 @@ function renderHomeContent(home) {
   window.naviesConfigureSiteMusic?.(home.settings);
   window.naviesApplyGeneralSettings?.(home.settings);
   const language = (document.documentElement.lang || 'es').slice(0, 2);
-  if (language === 'es') {
+  window.naviesHomeTranslations = home.translations || {};
+  const localised = language === 'es' ? null : home.translations?.[language];
+  {
+    const localTexts = localised?.texts || home.texts;
     const textTargets = { heroIntro:'.hero-intro', soundBody:'#sonido .sound-copy [data-i18n="soundBody"]', bandBody:'#banda .about-copy [data-i18n="bandBody"]' };
     Object.entries(textTargets).forEach(([key, selector]) => {
       const target = document.querySelector(selector);
-      if (target && home.texts[key]) target.textContent = home.texts[key];
+      if (target && localTexts?.[key]) target.textContent = localTexts[key];
     });
     home.members.forEach((member) => {
+      const translatedMember = localised?.members?.[member.id] || {};
       const card = document.querySelector(`[data-member="${member.id}"]`);
       if (!card) return;
       const instrument = card.querySelector('.instrument-word');
       const title = card.querySelector('h3');
       const summary = card.querySelector('p');
-      if (instrument) instrument.textContent = member.instrument;
+      if (instrument) instrument.textContent = translatedMember.instrument || member.instrument;
       if (title) title.textContent = member.title;
-      if (summary) summary.textContent = member.summary;
+      if (summary) summary.textContent = translatedMember.summary || member.summary;
     });
-    window.naviesEditableMemberBios = Object.fromEntries(home.members.map((member) => [member.id, member.bio]));
+    window.naviesEditableMemberBios = Object.fromEntries(home.members.map((member) => [member.id, localised?.members?.[member.id]?.bio || member.bio]));
     window.naviesEditableMemberTitles = Object.fromEntries(home.members.map((member) => [member.id, member.dialogTitle]));
     window.naviesEditableMemberSocials = Object.fromEntries(home.members.map((member) => [member.id, [
       { label:member.socialLabel, url:member.socialUrl },
       { label:member.socialLabel2, url:member.socialUrl2 },
       { label:member.socialLabel3, url:member.socialUrl3 }
     ].filter((social) => social.url)]));
-    const liveTitle = document.querySelector('.tv-coming-soon h1');
-    const liveDescription = document.querySelector('.tv-coming-soon > p[data-i18n="tvSoonCopy"]');
-    if (liveTitle) {
-      const title = home.live.title.trim();
-      const description = home.live.description.trim();
-      if (title && title !== description) {
-        if (title === 'Estamos afinando la pantalla.') liveTitle.innerHTML = 'Estamos afinando<br><em>la pantalla.</em>';
-        else liveTitle.textContent = title;
+    if (language === 'es') {
+      const liveTitle = document.querySelector('.tv-coming-soon h1');
+      const liveDescription = document.querySelector('.tv-coming-soon > p[data-i18n="tvSoonCopy"]');
+      if (liveTitle) {
+        const title = home.live.title.trim();
+        const description = home.live.description.trim();
+        if (title && title !== description) {
+          if (title === 'Estamos afinando la pantalla.') liveTitle.innerHTML = 'Estamos afinando<br><em>la pantalla.</em>';
+          else liveTitle.textContent = title;
+        }
       }
+      if (liveDescription) liveDescription.textContent = home.live.description;
     }
-    if (liveDescription) liveDescription.textContent = home.live.description;
   }
   const socials = document.querySelector('.socials');
   if (socials && Array.isArray(home.socials)) {
@@ -416,6 +509,7 @@ function monthLabel(month, language = 'es') {
 
 function renderNavyContent(content) {
   navyContent = structuredClone(content);
+  navyContent.home.translations = mergeHomeTranslations(navyContent.home?.translations);
   navyContent.links = (navyContent.links || []).filter((link) => link.id !== 'drive');
   if (navyContent.ensembles?.['cor-band']) navyContent.ensembles['cor-band'].links = (navyContent.ensembles['cor-band'].links || []).filter((link) => link.id !== 'cor-band-drive');
   const vocals = navyContent.home?.members?.find((member) => member.id === 'vocals');
@@ -1019,7 +1113,7 @@ contentEditor.innerHTML = `
       <div><p class="eyebrow"><span></span> THE NAVIES</p><h2>${editorText.siteEditing}</h2></div>
       <div class="content-editor-controls">
         <button class="content-editor-mobile-toggle" type="button" aria-expanded="false"><span>${editorText.home}</span><i aria-hidden="true"></i></button>
-        <nav class="content-editor-tabs"><button type="button" data-editor-tab="home" aria-pressed="true">${editorText.home}</button><button type="button" data-editor-tab="space" aria-pressed="false">${editorText.space}</button><button type="button" data-editor-tab="general" aria-pressed="false">${editorText.general}</button></nav>
+        <nav class="content-editor-tabs"><button type="button" data-editor-tab="home" aria-pressed="true">${editorText.home}</button><button type="button" data-editor-tab="space" aria-pressed="false">${editorText.space}</button><button type="button" data-editor-tab="general" aria-pressed="false">${editorText.general}</button><button type="button" data-editor-tab="translations" aria-pressed="false">${editorText.translations}</button></nav>
       </div>
     </header>
     <form class="content-editor-form" id="content-editor-form">
@@ -1027,6 +1121,7 @@ contentEditor.innerHTML = `
       <div class="editor-side-rail">
         <aside class="editor-section-nav" role="navigation" aria-label="Secciones de edición"></aside>
         <button class="editor-save" type="submit" aria-label="${editorText.save}" title="${editorText.save}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3.75h11.6L20.25 7.4v12.85H3.75V3.75H5Zm2.25 0v5.5h9.5v-5.5M7 20.25v-7.5h10v7.5M9.5 5.5h4.75"/></svg><span class="sr-only">${editorText.save}</span></button>
+        <button class="editor-save editor-save-translate" type="button" aria-label="${editorText.saveTranslate}" title="${editorText.saveTranslate}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h9M8.5 3v2M6 8.5c1.2 2.8 3.4 4.9 6.4 6M11.5 7.5c-1.1 3.6-3.6 6.4-7.2 8M14 19l3.2-8 3.2 8M15.2 16h4"/></svg><span class="sr-only">${editorText.saveTranslate}</span></button>
         <p class="content-editor-status" aria-live="polite"></p>
       </div>
       <div class="editor-pages">
@@ -1073,6 +1168,24 @@ contentEditor.innerHTML = `
         <section class="editor-section"><div class="editor-section-head"><div><span>01</span><h3>${editorText.siteProperties}</h3><p>${editorText.generalCopy}</p></div></div><div class="editor-settings" data-editor-settings></div></section>
         <section class="editor-section"><div class="editor-section-head"><div><span>02</span><h3>${editorText.users}</h3><p>${editorText.usersCopy}</p></div><button type="button" data-editor-add="user">${editorText.addUser}</button></div><div class="editor-list" data-editor-list="users"></div></section>
       </div>
+      <div class="editor-page" data-editor-page="translations" hidden>
+        <div class="editor-translation-toolbar">
+          <p>${editorText.translationsCopy}</p>
+          <div class="editor-translation-languages" role="tablist" aria-label="${editorText.translations}"></div>
+        </div>
+        <section class="editor-section">
+          <div class="editor-section-head"><div><span>01</span><h3>${editorText.translatedTexts}</h3></div></div>
+          <div class="editor-translation-fields" data-editor-translation-group="texts"></div>
+        </section>
+        <section class="editor-section">
+          <div class="editor-section-head"><div><span>02</span><h3>${editorText.translatedConcerts}</h3></div></div>
+          <div class="editor-translation-fields" data-editor-translation-group="concerts"></div>
+        </section>
+        <section class="editor-section">
+          <div class="editor-section-head"><div><span>03</span><h3>${editorText.translatedMembers}</h3></div></div>
+          <div class="editor-translation-fields" data-editor-translation-group="members"></div>
+        </section>
+      </div>
       </div>
       </div>
     </form>
@@ -1104,6 +1217,9 @@ let editorBaselineSnapshot = '';
 let editorSpaceEnsemble = 'the-navies';
 let editorEnsembleDrafts = { 'the-navies':[], 'cor-band':[], strings:[] };
 let editorEnsembleLinkDrafts = { 'the-navies':[], 'cor-band':[], strings:[] };
+let editorTranslations = {};
+let editorTranslationLanguage = 'ca';
+let editorTranslationSource = {};
 let updateEditorSectionActive = () => {};
 let editorSectionScrollFrame = null;
 let editorSectionPendingIndex = null;
@@ -1235,7 +1351,7 @@ function captureEditorSnapshot() {
   const fields = [...editorForm.querySelectorAll('input,select,textarea')]
     .filter((field) => !field.closest('.editor-event-row,.editor-link-row'))
     .map((field) => [field.name,field.type,field.type === 'checkbox' || field.type === 'radio' ? field.checked : field.value,field.closest('.editor-row')?.dataset.id || '']);
-  return JSON.stringify({ fields, ensembles });
+  return JSON.stringify({ fields, ensembles, translations:editorTranslations, translationSource:editorTranslationSource });
 }
 
 function refreshEditorDirty() {
@@ -1443,6 +1559,118 @@ function memberEditorRow(member = {}) {
   return row;
 }
 
+const translationLanguageNames = { ca:'Català', en:'English', fr:'Français', it:'Italiano' };
+
+function translationSourceFromEditor() {
+  const textRoot = contentEditor.querySelector('[data-editor-home-texts]');
+  const texts = Object.fromEntries(['heroIntro','soundBody','bandBody'].map((key) => [key, textRoot.querySelector(`[name="${key}"]`)?.value.trim() || '']));
+  const concerts = Object.fromEntries([...contentEditor.querySelectorAll('.editor-concert-row')].map((row) => [row.dataset.id || slugify(row.querySelector('[name="name"]').value), row.querySelector('[name="name"]').value.trim()]));
+  const members = Object.fromEntries([...contentEditor.querySelectorAll('.editor-member-row')].map((row) => [row.dataset.id, {
+    instrument:row.querySelector('[name="instrument"]').value.trim(),
+    summary:row.querySelector('[name="summary"]').value.trim(),
+    bio:row.querySelector('[name="bio"]').value.trim()
+  }]));
+  return { texts, concerts, members };
+}
+
+function renderTranslationEditor() {
+  const languageBar = contentEditor.querySelector('.editor-translation-languages');
+  const textFields = contentEditor.querySelector('[data-editor-translation-group="texts"]');
+  const concertFields = contentEditor.querySelector('[data-editor-translation-group="concerts"]');
+  const memberFields = contentEditor.querySelector('[data-editor-translation-group="members"]');
+  languageBar.replaceChildren(...Object.entries(translationLanguageNames).map(([code, label]) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = label;
+    button.dataset.translationLanguage = code;
+    button.setAttribute('aria-selected', String(code === editorTranslationLanguage));
+    return button;
+  }));
+  const translation = editorTranslations[editorTranslationLanguage];
+  if (!translation) {
+    const empty = document.createElement('p');
+    empty.className = 'editor-translation-empty';
+    empty.textContent = editorText.translationsCopy;
+    textFields.replaceChildren(empty);
+    concertFields.replaceChildren();
+    memberFields.replaceChildren();
+    return;
+  }
+  const textControls = [];
+  const textLabels = { heroIntro:editorText.presentation, soundBody:editorText.sound, bandBody:editorText.band };
+  Object.entries(translation.texts || {}).forEach(([key, value]) => {
+    const control = textAreaField(textLabels[key] || key, `translation-${editorTranslationLanguage}-texts-${key}`, value);
+    control.querySelector('textarea').addEventListener('input', (event) => { editorTranslations[editorTranslationLanguage].texts[key] = event.target.value; refreshEditorDirty(); });
+    textControls.push(control);
+  });
+  const concertControls = [];
+  Object.entries(translation.concerts || {}).forEach(([id, value]) => {
+    const original = contentEditor.querySelector(`.editor-concert-row[data-id="${CSS.escape(id)}"] [name="name"]`)?.value || id;
+    const control = field(original, `translation-${editorTranslationLanguage}-concert-${id}`, value, 'text', { maxlength:'160' });
+    control.querySelector('input').addEventListener('input', (event) => { editorTranslations[editorTranslationLanguage].concerts[id] = event.target.value; refreshEditorDirty(); });
+    concertControls.push(control);
+  });
+  const memberControls = [];
+  Object.entries(translation.members || {}).forEach(([id, member]) => {
+    const card = document.createElement('div');
+    card.className = 'editor-translation-member';
+    const title = document.createElement('h5');
+    title.textContent = contentEditor.querySelector(`.editor-member-row[data-id="${CSS.escape(id)}"] [name="title"]`)?.value || id;
+    card.append(title);
+    [['instrument',editorText.instrument,160],['summary',editorText.short,300],['bio',editorText.long,800]].forEach(([key, label, maximum]) => {
+      const control = key === 'instrument' ? field(label, `translation-${editorTranslationLanguage}-${id}-${key}`, member[key] || '', 'text', { maxlength:String(maximum) }) : textAreaField(label, `translation-${editorTranslationLanguage}-${id}-${key}`, member[key] || '', maximum);
+      control.querySelector('input,textarea').addEventListener('input', (event) => { editorTranslations[editorTranslationLanguage].members[id][key] = event.target.value; refreshEditorDirty(); });
+      card.append(control);
+    });
+    memberControls.push(card);
+  });
+  textFields.replaceChildren(...textControls);
+  concertFields.replaceChildren(...concertControls);
+  memberFields.replaceChildren(...memberControls);
+}
+
+async function translateEditorContent({ button = null, quiet = false } = {}) {
+  const session = contentSession();
+  if (!session) { setEditorStatus(editorText.expired); return false; }
+  if (button) {
+    button.disabled = true;
+    button.textContent = editorText.translating;
+  }
+  setEditorStatus(editorText.translating);
+  const payload = translationSourceFromEditor();
+  try {
+    for (const target of Object.keys(translationLanguageNames)) {
+      const response = await fetch(`${portalApiUrl}/translate`, {
+        method:'POST',
+        headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${session.token}` },
+        body:JSON.stringify({ target, payload })
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result.translation) throw new Error(result.error || 'translation_failed');
+      editorTranslations[target] = result.translation;
+    }
+    editorTranslationSource = structuredClone(payload);
+    renderTranslationEditor();
+    refreshEditorDirty();
+    if (!quiet) setEditorStatus(editorText.translated, true);
+    return true;
+  } catch (_) {
+    setEditorStatus(editorText.translateError);
+    return false;
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = editorText.translateAll;
+    }
+  }
+}
+
+function translationsNeedRefresh() {
+  const source = translationSourceFromEditor();
+  const allLanguagesPresent = Object.keys(translationLanguageNames).every((language) => editorTranslations[language]);
+  return !allLanguagesPresent || JSON.stringify(source) !== JSON.stringify(editorTranslationSource || {});
+}
+
 function populateEditor() {
   if (!navyContent) return;
   const homeTexts = contentEditor.querySelector('[data-editor-home-texts]');
@@ -1454,6 +1682,9 @@ function populateEditor() {
   const songList = contentEditor.querySelector('[data-editor-list="songs"]');
   const linkList = contentEditor.querySelector('[data-editor-list="links"]');
   const userList = contentEditor.querySelector('[data-editor-list="users"]');
+  editorTranslations = structuredClone(navyContent.home.translations || {});
+  editorTranslationSource = structuredClone(navyContent.home.translationSource || {});
+  editorTranslationLanguage = 'ca';
   homeTexts.replaceChildren(textAreaField(editorText.presentation, 'heroIntro', navyContent.home.texts.heroIntro), textAreaField(editorText.sound, 'soundBody', navyContent.home.texts.soundBody), textAreaField(editorText.band, 'bandBody', navyContent.home.texts.bandBody));
   const seasonField = document.createElement('label');
   seasonField.innerHTML = `<span>${editorText.defaultSeason}</span>`;
@@ -1625,6 +1856,7 @@ function populateEditor() {
   songList.replaceChildren(...navyContent.songs.map(songEditorRow));
   linkList.replaceChildren(...editorEnsembleLinkDrafts[editorSpaceEnsemble].map(linkEditorRow));
   userList.replaceChildren(...editorUsers.map(userEditorRow));
+  renderTranslationEditor();
   editorBaselineSnapshot = captureEditorSnapshot();
   editorDirty = false;
   setEditorStatus('');
@@ -1697,7 +1929,7 @@ function editorContent() {
   };
   editorEnsembleLinkDrafts[editorSpaceEnsemble] = readLinkRows();
   const links = editorEnsembleLinkDrafts['the-navies'];
-  return { home:{ settings:{ defaultSeason, initialPlayback, initialSongId, countdownEnabled, initialVolume, sessionIdleEnabled, sessionIdleHours, fallbackLanguage, faviconMode }, live:navyContent.home.live, texts:{ heroIntro:homeTexts.querySelector('[name="heroIntro"]').value.trim(), soundBody:homeTexts.querySelector('[name="soundBody"]').value.trim(), bandBody:homeTexts.querySelector('[name="bandBody"]').value.trim() }, concerts, members, socials }, events, ensembles:{ 'cor-band':{ events:editorEnsembleDrafts['cor-band'], links:editorEnsembleLinkDrafts['cor-band'] }, strings:{ events:editorEnsembleDrafts.strings, links:editorEnsembleLinkDrafts.strings } }, songs, links };
+  return { home:{ settings:{ defaultSeason, initialPlayback, initialSongId, countdownEnabled, initialVolume, sessionIdleEnabled, sessionIdleHours, fallbackLanguage, faviconMode }, live:navyContent.home.live, texts:{ heroIntro:homeTexts.querySelector('[name="heroIntro"]').value.trim(), soundBody:homeTexts.querySelector('[name="soundBody"]').value.trim(), bandBody:homeTexts.querySelector('[name="bandBody"]').value.trim() }, translations:structuredClone(editorTranslations), translationSource:structuredClone(editorTranslationSource), concerts, members, socials }, events, ensembles:{ 'cor-band':{ events:editorEnsembleDrafts['cor-band'], links:editorEnsembleLinkDrafts['cor-band'] }, strings:{ events:editorEnsembleDrafts.strings, links:editorEnsembleLinkDrafts.strings } }, songs, links };
 }
 
 function syncEditorAccess() {
@@ -1712,7 +1944,7 @@ function syncEditorAccess() {
 }
 
 function selectEditorPage(route) {
-  const page = route === 'home' ? 'home' : route === 'espacio-navy' ? 'space' : 'general';
+  const page = ['home','space','general','translations'].includes(route) ? route : route === 'espacio-navy' ? 'space' : 'home';
   sessionStorage.setItem('navies-editor-page', page);
   contentEditor.querySelectorAll('[data-editor-tab]').forEach((item) => item.setAttribute('aria-pressed', String(item.dataset.editorTab === page)));
   contentEditor.querySelectorAll('[data-editor-page]').forEach((item) => { item.hidden = item.dataset.editorPage !== page; });
@@ -1728,9 +1960,10 @@ editContentButton.addEventListener('click', async (event) => {
   if (menuToggle?.getAttribute('aria-expanded') === 'true') menuToggle.click();
   const reopeningEditor = location.hash === '#edicion' || location.hash === '#edicion-del-sitio';
   const storedEditorPage = sessionStorage.getItem('navies-editor-page');
-  editorOriginRoute = reopeningEditor && storedEditorPage
-    ? (storedEditorPage === 'space' ? 'espacio-navy' : storedEditorPage === 'home' ? 'home' : 'general')
-    : (document.documentElement.dataset.route || 'home');
+  editorOriginRoute = document.documentElement.dataset.route || 'home';
+  const initialEditorPage = reopeningEditor && ['home','space','general','translations'].includes(storedEditorPage)
+    ? storedEditorPage
+    : editorOriginRoute === 'espacio-navy' ? 'space' : 'home';
   if (!navyContent) await loadNavyContent();
   if (!navyContent) {
     document.documentElement.classList.remove('editor-route-pending');
@@ -1739,7 +1972,7 @@ editContentButton.addEventListener('click', async (event) => {
   }
   await loadEditorUsers();
   populateEditor();
-  selectEditorPage(editorOriginRoute);
+  selectEditorPage(initialEditorPage);
   dashboard.hidden = true;
   document.querySelectorAll('#main-nav a').forEach((link) => link.classList.toggle('active', link === editContentButton));
   if (editorOriginRoute !== 'espacio-navy') window.naviesShowEditorHost?.();
@@ -1810,6 +2043,17 @@ window.addEventListener('navies-route-change', (event) => {
 });
 
 contentEditor.addEventListener('click', (event) => {
+  const translationLanguage = event.target.closest('[data-translation-language]');
+  if (translationLanguage) {
+    editorTranslationLanguage = translationLanguage.dataset.translationLanguage;
+    renderTranslationEditor();
+    return;
+  }
+  const translateButton = event.target.closest('[data-editor-translate]');
+  if (translateButton) {
+    translateEditorContent({ button:translateButton });
+    return;
+  }
   const ensembleToggle = event.target.closest('.editor-ensemble-toggle');
   if (ensembleToggle) {
     const picker = ensembleToggle.closest('.editor-ensemble-picker');
@@ -1887,17 +2131,22 @@ editorForm.addEventListener('change', (event) => {
   refreshEditorDirty();
 });
 
-async function saveEditorChanges() {
+async function saveEditorChanges(translateBeforeSave = false) {
   const session = contentSession();
   if (!session) {
     setEditorStatus(editorText.expired);
     syncEditorAccess();
     return false;
   }
-  const save = contentEditor.querySelector('.editor-save');
-  save.disabled = true;
+  const saveButtons = [...contentEditor.querySelectorAll('.editor-save')];
+  saveButtons.forEach((button) => { button.disabled = true; });
   setEditorStatus(editorText.saving);
   try {
+    if (translateBeforeSave && translationsNeedRefresh()) {
+      const translated = await translateEditorContent({ quiet:true });
+      if (!translated) return false;
+      setEditorStatus(editorText.saving);
+    }
     const response = await fetch(`${portalApiUrl}/content`, {
       method:'PUT',
       headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${session.token}` },
@@ -1922,13 +2171,17 @@ async function saveEditorChanges() {
     setEditorStatus(error.message === 'invalid_session' ? editorText.expiredAgain : editorText.saveError);
     return false;
   } finally {
-    save.disabled = false;
+    saveButtons.forEach((button) => { button.disabled = false; });
   }
 }
 
 editorForm.addEventListener('submit', async (event) => {
   event.preventDefault();
-  await saveEditorChanges();
+  await saveEditorChanges(false);
+});
+
+contentEditor.querySelector('.editor-save-translate').addEventListener('click', async () => {
+  await saveEditorChanges(true);
 });
 
 let editorExitResolver = null;

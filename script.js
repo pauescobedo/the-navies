@@ -1544,12 +1544,12 @@ const memberDialogBios = {
 };
 function openMember(member) {
   const displayNames = memberDisplayNames[currentLanguage] || memberDisplayNames.es;
-  const editableTitle = currentLanguage === 'es' ? window.naviesEditableMemberTitles?.[member] : '';
+  const editableTitle = window.naviesEditableMemberTitles?.[member] || '';
   dialogName.textContent = editableTitle || displayNames[member] || (translations[currentLanguage] || translations.es)[memberTitleKeys[member]];
-  const editableBio = currentLanguage === 'es' ? window.naviesEditableMemberBios?.[member] : '';
+  const editableBio = window.naviesEditableMemberBios?.[member] || '';
   dialogBio.innerHTML = editableBio || (memberDialogBios[currentLanguage] || memberDialogBios.es)[member];
   memberDialog.querySelectorAll('.dialog-social-extra').forEach((link) => link.remove());
-  const editableSocials = currentLanguage === 'es' ? window.naviesEditableMemberSocials?.[member] : null;
+  const editableSocials = window.naviesEditableMemberSocials?.[member] || null;
   if (editableSocials?.length) {
     const [first, ...rest] = editableSocials;
     dialogSocial.href = first.url;
