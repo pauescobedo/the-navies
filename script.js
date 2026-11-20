@@ -57,6 +57,8 @@ const countdownStart = document.querySelector('#countdown-start');
 const countdownEnter = document.querySelector('#countdown-enter');
 const countdownAudio = document.querySelector('#countdown-audio');
 const countdownVolume = document.querySelector('#countdown-volume');
+let cachedSiteSettings = {};
+try { cachedSiteSettings = JSON.parse(localStorage.getItem('navies-site-settings') || '{}') || {}; } catch (_) {}
 const concertMoment = new Date('2026-11-21T14:00:00+01:00').getTime();
 const countdownTracks = [
   { file:'shake-it-off', artist:'Taylor Swift', title:'Shake It Off', start:163, end:216, fadeAtEnd:true },
@@ -66,9 +68,9 @@ const countdownTracks = [
   { file:'the-final-countdown', artist:'Europe', title:'The Final Countdown', start:244, fadeAtEnd:true },
   { file:'have-you-ever-seen-the-rain', artist:'Creedence Clearwater Revival', title:'Have You Ever Seen the Rain?', start:101, fadeAtEnd:true }
 ];
-let countdownMusicVolume = .24;
-let siteMusicVolume = .34;
-let countdownExperienceEnabled = true;
+let siteMusicVolume = Number.isFinite(Number(cachedSiteSettings.initialVolume)) ? Math.max(0, Math.min(100, Number(cachedSiteSettings.initialVolume))) / 100 : .34;
+let countdownMusicVolume = siteMusicVolume * .7;
+let countdownExperienceEnabled = cachedSiteSettings.countdownEnabled !== false;
 const countdownFadeInDuration = 1600;
 const countdownFadeOutDuration = 2000;
 let countdownTrackIndex = Math.floor(Math.random() * countdownTracks.length);
@@ -926,7 +928,7 @@ const seasonThemes = {
   autumn: { color:'#C77B52', icon:'🍁' },
   winter: { color:'#A8DADC', icon:'❄️' }
 };
-let naviesFaviconMode = 'dynamic';
+let naviesFaviconMode = cachedSiteSettings.faviconMode === 'static' ? 'static' : 'dynamic';
 let siteFooter = document.querySelector('footer');
 if (!siteFooter) {
   siteFooter = document.createElement('footer');
@@ -1051,7 +1053,13 @@ let siteMusicFadeFrame = null;
 let siteMusicEndFadeStarted = false;
 
 window.naviesConfigureSiteMusic = (settings = {}) => {
-  if (siteMusicIndex >= 0) return;
+  if (siteMusicIndex >= 0 && !siteMusicAudio.paused) return;
+  if (siteMusicIndex >= 0) {
+    siteMusicAudio.pause();
+    siteMusicAudio.currentTime = 0;
+    siteMusicIndex = -1;
+    siteMusicHistory = [];
+  }
   const customIndex = settings.initialPlayback === 'custom'
     ? countdownTracks.findIndex((track) => track.file === settings.initialSongId)
     : -1;
@@ -1071,12 +1079,14 @@ window.naviesApplyGeneralSettings = (settings = {}) => {
     : (legacyVolume[settings.initialVolume] ?? legacyVolume.medium);
   siteMusicVolume = configuredVolume / 100;
   countdownMusicVolume = siteMusicVolume * .7;
-  if (siteMusicIndex >= 0 && siteMusicAudio.paused) {
-    setAudioLevel(siteMusicAudio, countdownTracks[siteMusicIndex].file === 'have-you-ever-seen-the-rain' ? 0 : siteMusicVolume);
+  if (siteMusicIndex >= 0) {
+    const startSilent = siteMusicAudio.paused && countdownTracks[siteMusicIndex].file === 'have-you-ever-seen-the-rain';
+    setAudioLevel(siteMusicAudio, startSilent ? 0 : siteMusicVolume);
   }
   countdownExperienceEnabled = settings.countdownEnabled !== false;
   const fallbackLanguage = ['ca','es','en','fr','it'].includes(settings.fallbackLanguage) ? settings.fallbackLanguage : 'es';
   naviesFaviconMode = settings.faviconMode === 'static' ? 'static' : 'dynamic';
+  try { localStorage.setItem('navies-site-settings', JSON.stringify(settings)); } catch (_) {}
   setSeason(document.documentElement.dataset.season || 'autumn', false);
   localStorage.setItem('the-navies-fallback-language', fallbackLanguage);
   const idleHours = settings.sessionIdleEnabled === false ? 0 : Math.max(1, Math.min(720, Number(settings.sessionIdleHours) || 24));
@@ -1373,7 +1383,7 @@ function setSeason(season, persist = true) {
 }
 window.naviesSetSeason = setSeason;
 window.naviesRefreshFavicon = () => setSeason(document.documentElement.dataset.season || 'autumn', false);
-setSeason(window.__naviesInitialSeason || localStorage.getItem('the-navies-season') || 'autumn', false);
+setSeason(window.__naviesInitialSeason || cachedSiteSettings.defaultSeason || localStorage.getItem('the-navies-season') || 'autumn', false);
 requestAnimationFrame(() => document.documentElement.classList.add('theme-ready'));
 seasonControl.querySelectorAll('.season-option').forEach((button) => button.addEventListener('click', () => setSeason(button.dataset.season)));
 Object.assign(translations.es, { navVideos:'Navies Live', time:'13:00h', tvSoonTitle:'Estamos afinando<br><em>la pantalla.</em>', tvSoonCopy:'Próximamente publicaremos aquí los primeros vídeos de The Navies.' });

@@ -405,6 +405,7 @@ function concertName(concert) {
 
 function renderHomeContent(home) {
   if (!home) return;
+  try { localStorage.setItem('navies-site-settings', JSON.stringify(home.settings || {})); } catch (_) {}
   if (home.settings?.defaultSeason) window.naviesSetSeason?.(home.settings.defaultSeason, false);
   window.naviesConfigureSiteMusic?.(home.settings);
   window.naviesApplyGeneralSettings?.(home.settings);
@@ -550,7 +551,7 @@ function renderSelectedEnsemble() {
 async function loadNavyContent() {
   if (!portalApiUrl) return;
   try {
-    const response = await fetch(`${portalApiUrl}/content`, { headers:{ Accept:'application/json' } });
+    const response = await fetch(`${portalApiUrl}/content`, { cache:'no-store', headers:{ Accept:'application/json' } });
     if (!response.ok) return;
     const result = await response.json();
     if (result.content) renderNavyContent(result.content);
@@ -2147,13 +2148,15 @@ async function saveEditorChanges(translateBeforeSave = false) {
       if (!translated) return false;
       setEditorStatus(editorText.saving);
     }
+    const contentToSave = editorContent();
     const response = await fetch(`${portalApiUrl}/content`, {
       method:'PUT',
       headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${session.token}` },
-      body:JSON.stringify({ content:editorContent() })
+      body:JSON.stringify({ content:contentToSave })
     });
     const result = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(result.error || 'save_failed');
+    if (JSON.stringify(result.content?.home?.settings || {}) !== JSON.stringify(contentToSave.home.settings)) throw new Error('settings_not_saved');
     const usersResponse = await fetch(`${portalApiUrl}/users`, {
       method:'PUT',
       headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${session.token}` },
